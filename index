@@ -1,1 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CWEB 190 – Web Midterm Study Quiz</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
+<!-- ══════════════════════════════════════════════════════════
+     Navigation
+═══════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="container">
+    <a href="#" class="nav-logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="3" width="20" height="18" rx="3" fill="#58a6ff" opacity=".2" stroke="#58a6ff" stroke-width="1.5"/>
+        <path d="M7 8l-3 4 3 4M17 8l3 4-3 4M13 6l-2 12" stroke="#58a6ff" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      CWEB 190 Quiz
+    </a>
+    <div class="nav-links">
+      <a href="#" id="nav-home-link">Home</a>
+      <a href="#" id="nav-start-link">Start Quiz</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════
+     PAGE: HOME
+═══════════════════════════════════════════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="container">
+
+    <div class="hero-badge">CWEB 190 – Midterm Prep</div>
+    <h1>Web Development Midterm Quiz</h1>
+    <p class="hero-sub">
+      Practise your knowledge of DOM manipulation, BOM, jQuery, HTML forms, form validation, regex,
+      and the jQuery Validate plugin. Each session draws <strong>10 multiple-choice</strong> and
+      <strong>10 coding questions</strong> at random from a bank of <strong>70 questions</strong>.
+    </p>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-icon">📋</div>
+        <h3>Multiple Choice</h3>
+        <p>50 questions <span class="small">in the bank</span></p>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">💻</div>
+        <h3>Coding Questions</h3>
+        <p>20 questions <span class="small">in the bank</span></p>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">🎯</div>
+        <h3>Per Session</h3>
+        <p>20 questions <span class="small">10 MC + 10 Coding</span></p>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">🔀</div>
+        <h3>Randomized</h3>
+        <p>Every run <span class="small">shuffled fresh</span></p>
+      </div>
+    </div>
+
+    <div class="topics">
+      <span class="topic-pill">🌐 LO4 – BOM (window, history, location)</span>
+      <span class="topic-pill">🌳 LO4 – DOM Manipulation</span>
+      <span class="topic-pill">⚡ LO4 – jQuery Selectors &amp; Filters</span>
+      <span class="topic-pill">🎨 LO4 – jQuery .css()</span>
+      <span class="topic-pill">🖱️ LO4 – jQuery Events (.on, .click, .hover)</span>
+      <span class="topic-pill">✨ LO4 – jQuery Effects (slideDown, show/hide)</span>
+      <span class="topic-pill">📝 LO5 – HTML Forms</span>
+      <span class="topic-pill">🔍 LO5 – Form Handling &amp; .elements</span>
+      <span class="topic-pill">✅ LO5 – Form Validation &amp; blur</span>
+      <span class="topic-pill">🔤 LO5 – Regular Expressions</span>
+      <span class="topic-pill">🔌 LO5 – jQuery Validate Plugin</span>
+    </div>
+
+    <button class="btn btn-primary" id="btn-start" style="font-size:1.1rem; padding:.9rem 2.5rem;">
+      Start Quiz →
+    </button>
+
+    <div style="margin-top:2.5rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem;">
+      <h3 style="margin-bottom:.8rem; color:var(--text-muted); font-size:.9rem; text-transform:uppercase; letter-spacing:.05em;">How it works</h3>
+      <ol style="padding-left:1.3rem; line-height:2; font-size:.93rem; color:var(--text-muted);">
+        <li>10 random multiple-choice and 10 random coding questions are selected each run.</li>
+        <li>For <strong style="color:var(--accent)">multiple choice</strong>, pick an answer and submit — you'll see the result and explanation immediately.</li>
+        <li>For <strong style="color:var(--accent3)">coding questions</strong>, write your solution in the text box, then reveal the model answer to compare.</li>
+        <li>Self-grade each coding question as ✅ Correct or ❌ Needs Practice.</li>
+        <li>Review your full results at the end, then hit <em>New Quiz</em> to try a fresh set!</li>
+      </ol>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PAGE: QUIZ
+═══════════════════════════════════════════════════════════ -->
+<div id="page-quiz" class="page">
+  <div class="container">
+
+    <div class="quiz-header">
+      <h2>Web Midterm Quiz</h2>
+      <div class="timer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span id="timer-display">00:00</span>
+      </div>
+      <span style="font-size:.85rem; color:var(--text-muted);" id="q-counter">Question 1 of 20</span>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+
+    <div id="question-card" class="question-card"></div>
+
+    <div class="quiz-nav">
+      <button class="btn btn-secondary" id="btn-prev">← Previous</button>
+      <button class="btn btn-primary"   id="btn-next">Next →</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PAGE: RESULTS
+═══════════════════════════════════════════════════════════ -->
+<div id="page-results" class="page">
+  <div class="container">
+
+    <div class="results-header">
+      <div class="score-circle" id="score-circle">
+        <span class="score-number" id="score-number">0%</span>
+      </div>
+      <h1 style="margin-bottom:.4rem;">Quiz Complete!</h1>
+      <p class="results-sub" id="results-summary"></p>
+
+      <div class="results-breakdown">
+        <div class="breakdown-card good">
+          <div class="num" id="result-correct">0</div>
+          <div class="lbl">Correct</div>
+        </div>
+        <div class="breakdown-card bad">
+          <div class="num" id="result-wrong">0</div>
+          <div class="lbl">Incorrect</div>
+        </div>
+        <div class="breakdown-card">
+          <div class="num" id="result-skipped">0</div>
+          <div class="lbl">Skipped</div>
+        </div>
+        <div class="breakdown-card">
+          <div class="num" id="result-time">00:00</div>
+          <div class="lbl">Time Taken</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <button class="btn btn-primary"   id="btn-restart">🔀 New Quiz</button>
+        <button class="btn btn-secondary" id="btn-home">🏠 Home</button>
+      </div>
+    </div>
+
+    <div class="review-section">
+      <h2 style="margin-bottom:1.2rem;">Question Review</h2>
+      <div id="review-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="questions.js"></script>
+<script src="quiz.js"></script>
+<script>
+  document.getElementById('nav-home-link').addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-home').classList.add('active');
+    window.scrollTo({ top: 0 });
+  });
+  document.getElementById('nav-start-link').addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('btn-start').click();
+  });
+</script>
+
+</body>
+</html>
