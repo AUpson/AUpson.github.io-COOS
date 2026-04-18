@@ -1,193 +1,771 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CWEB 190 – Web Midterm Study Quiz</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COOS-190 Server Administration Quiz</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --accent: #4f8ef7;
+    --accent2: #7c3aed;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #eab308;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #2d3248;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  /* NAV */
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; }
+  nav .logo { font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: .5px; }
+  nav button { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: .85rem; transition: all .2s; }
+  nav button:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* VIEWS */
+  .view { display: none; padding: 32px 24px; max-width: 900px; margin: 0 auto; }
+  .view.active { display: block; }
+
+  /* HOME */
+  .home-hero { text-align: center; padding: 40px 0 32px; }
+  .home-hero h1 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .home-hero p { color: var(--muted); margin-top: 10px; font-size: 1rem; }
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 32px; }
+  .module-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; cursor: pointer; transition: all .2s; position: relative; overflow: hidden; }
+  .module-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .module-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(79,142,247,.15); }
+  .module-card h3 { font-size: 1rem; font-weight: 700; color: var(--text); }
+  .module-card p { color: var(--muted); font-size: .85rem; margin-top: 8px; }
+  .module-card .badge { display: inline-block; margin-top: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: .75rem; color: var(--accent); }
+  .full-quiz-btn { display: block; width: 100%; margin-top: 24px; padding: 18px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-size: 1.1rem; font-weight: 700; border: none; border-radius: var(--radius); cursor: pointer; transition: opacity .2s; }
+  .full-quiz-btn:hover { opacity: .9; }
+
+  /* QUIZ */
+  .quiz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .quiz-header h2 { font-size: 1.4rem; font-weight: 700; }
+  .progress-bar { background: var(--surface2); border-radius: 99px; height: 8px; flex: 1; min-width: 120px; }
+  .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .3s; }
+  .score-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; font-size: .9rem; }
+
+  .section-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin: 32px 0 16px; padding: 6px 12px; background: rgba(79,142,247,.08); border-radius: 6px; display: inline-block; }
+
+  .question-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 16px; transition: border-color .2s; }
+  .question-card.answered-correct { border-color: var(--green); }
+  .question-card.answered-wrong { border-color: var(--red); }
+  .question-num { font-size: .75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .question-text { font-size: 1rem; line-height: 1.6; margin-bottom: 16px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text); padding: 12px 16px; border-radius: 10px; cursor: pointer; text-align: left; font-size: .9rem; line-height: 1.5; transition: all .2s; }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(79,142,247,.08); }
+  .option-btn.correct { background: rgba(34,197,94,.12); border-color: var(--green); color: var(--green); }
+  .option-btn.wrong { background: rgba(239,68,68,.12); border-color: var(--red); color: var(--red); }
+  .option-btn.reveal-correct { background: rgba(34,197,94,.08); border-color: var(--green); }
+  .option-btn:disabled { cursor: default; }
+
+  /* WRITTEN */
+  .written-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 16px; }
+  .written-card .question-text { margin-bottom: 14px; }
+  .answer-toggle { background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: .85rem; transition: all .2s; }
+  .answer-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .answer-box { display: none; margin-top: 14px; padding: 14px 16px; background: rgba(79,142,247,.06); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; font-size: .92rem; line-height: 1.7; color: var(--text); }
+  .answer-box.visible { display: block; }
+
+  /* RESULT */
+  .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; text-align: center; margin-bottom: 24px; }
+  .result-score { font-size: 3.5rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .result-label { color: var(--muted); margin-top: 8px; font-size: 1rem; }
+  .result-grade { font-size: 1.4rem; font-weight: 700; margin-top: 16px; }
+  .grade-A { color: var(--green); }
+  .grade-B { color: #86efac; }
+  .grade-C { color: var(--yellow); }
+  .grade-D { color: #f97316; }
+  .grade-F { color: var(--red); }
+
+  .quiz-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+  .btn-primary { padding: 12px 24px; background: var(--accent); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: .95rem; font-weight: 600; transition: opacity .2s; }
+  .btn-primary:hover { opacity: .85; }
+  .btn-secondary { padding: 12px 24px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; cursor: pointer; font-size: .95rem; transition: all .2s; }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .submit-bar { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 16px 0; margin-top: 32px; }
+  .submit-bar .btn-primary { width: 100%; max-width: 320px; display: block; margin: 0 auto; font-size: 1rem; padding: 14px; }
+
+  @media(max-width:600px) {
+    .view { padding: 20px 14px; }
+    .home-hero h1 { font-size: 1.6rem; }
+    .module-grid { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════
-     Navigation
-═══════════════════════════════════════════════════════════ -->
 <nav>
-  <div class="container">
-    <a href="#" class="nav-logo">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="3" width="20" height="18" rx="3" fill="#58a6ff" opacity=".2" stroke="#58a6ff" stroke-width="1.5"/>
-        <path d="M7 8l-3 4 3 4M17 8l3 4-3 4M13 6l-2 12" stroke="#58a6ff" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-      CWEB 190 Quiz
-    </a>
-    <div class="nav-links">
-      <a href="#" id="nav-home-link">Home</a>
-      <a href="#" id="nav-start-link">Start Quiz</a>
-    </div>
-  </div>
+  <span class="logo">COOS-190 Quiz</span>
+  <button onclick="showHome()">🏠 Home</button>
 </nav>
 
-<!-- ══════════════════════════════════════════════════════════
-     PAGE: HOME
-═══════════════════════════════════════════════════════════ -->
-<div id="page-home" class="page active">
-  <div class="container">
-
-    <div class="hero-badge">CWEB 190 – Midterm Prep</div>
-    <h1>Web Development Midterm Quiz</h1>
-    <p class="hero-sub">
-      Practise your knowledge of DOM manipulation, BOM, jQuery, HTML forms, form validation, regex,
-      and the jQuery Validate plugin. Each session draws <strong>10 multiple-choice</strong> and
-      <strong>10 coding questions</strong> at random from a bank of <strong>70 questions</strong>.
-    </p>
-
-    <div class="info-grid">
-      <div class="info-card">
-        <div class="info-card-icon">📋</div>
-        <h3>Multiple Choice</h3>
-        <p>50 questions <span class="small">in the bank</span></p>
-      </div>
-      <div class="info-card">
-        <div class="info-card-icon">💻</div>
-        <h3>Coding Questions</h3>
-        <p>20 questions <span class="small">in the bank</span></p>
-      </div>
-      <div class="info-card">
-        <div class="info-card-icon">🎯</div>
-        <h3>Per Session</h3>
-        <p>20 questions <span class="small">10 MC + 10 Coding</span></p>
-      </div>
-      <div class="info-card">
-        <div class="info-card-icon">🔀</div>
-        <h3>Randomized</h3>
-        <p>Every run <span class="small">shuffled fresh</span></p>
-      </div>
+<!-- HOME VIEW -->
+<div id="view-home" class="view active">
+  <div class="home-hero">
+    <h1>Server Administration Quiz</h1>
+    <p>COOS-190 · Modules 8–12 · Winter 2025/2026</p>
+  </div>
+  <div class="module-grid">
+    <div class="module-card" onclick="startModuleQuiz(8)">
+      <h3>Module 8</h3>
+      <p>Windows Server Security</p>
+      <span class="badge">20 MC · 5 Written</span>
     </div>
-
-    <div class="topics">
-      <span class="topic-pill">🌐 LO4 – BOM (window, history, location)</span>
-      <span class="topic-pill">🌳 LO4 – DOM Manipulation</span>
-      <span class="topic-pill">⚡ LO4 – jQuery Selectors &amp; Filters</span>
-      <span class="topic-pill">🎨 LO4 – jQuery .css()</span>
-      <span class="topic-pill">🖱️ LO4 – jQuery Events (.on, .click, .hover)</span>
-      <span class="topic-pill">✨ LO4 – jQuery Effects (slideDown, show/hide)</span>
-      <span class="topic-pill">📝 LO5 – HTML Forms</span>
-      <span class="topic-pill">🔍 LO5 – Form Handling &amp; .elements</span>
-      <span class="topic-pill">✅ LO5 – Form Validation &amp; blur</span>
-      <span class="topic-pill">🔤 LO5 – Regular Expressions</span>
-      <span class="topic-pill">🔌 LO5 – jQuery Validate Plugin</span>
+    <div class="module-card" onclick="startModuleQuiz(9)">
+      <h3>Module 9</h3>
+      <p>Remote Desktop Services</p>
+      <span class="badge">20 MC · 5 Written</span>
     </div>
-
-    <button class="btn btn-primary" id="btn-start" style="font-size:1.1rem; padding:.9rem 2.5rem;">
-      Start Quiz →
-    </button>
-
-    <div style="margin-top:2.5rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem;">
-      <h3 style="margin-bottom:.8rem; color:var(--text-muted); font-size:.9rem; text-transform:uppercase; letter-spacing:.05em;">How it works</h3>
-      <ol style="padding-left:1.3rem; line-height:2; font-size:.93rem; color:var(--text-muted);">
-        <li>10 random multiple-choice and 10 random coding questions are selected each run.</li>
-        <li>For <strong style="color:var(--accent)">multiple choice</strong>, pick an answer and submit — you'll see the result and explanation immediately.</li>
-        <li>For <strong style="color:var(--accent3)">coding questions</strong>, write your solution in the text box, then reveal the model answer to compare.</li>
-        <li>Self-grade each coding question as ✅ Correct or ❌ Needs Practice.</li>
-        <li>Review your full results at the end, then hit <em>New Quiz</em> to try a fresh set!</li>
-      </ol>
+    <div class="module-card" onclick="startModuleQuiz(10)">
+      <h3>Module 10</h3>
+      <p>Remote Access &amp; Web Services</p>
+      <span class="badge">20 MC · 5 Written</span>
     </div>
+    <div class="module-card" onclick="startModuleQuiz(11)">
+      <h3>Module 11</h3>
+      <p>Server &amp; Performance Monitoring</p>
+      <span class="badge">20 MC · 5 Written</span>
+    </div>
+    <div class="module-card" onclick="startModuleQuiz(12)">
+      <h3>Module 12</h3>
+      <p>Upgrade &amp; Migration</p>
+      <span class="badge">20 MC · 5 Written</span>
+    </div>
+  </div>
+  <button class="full-quiz-btn" onclick="startFullQuiz()">📋 Take Full Quiz — 100 MC + 10 Written</button>
+</div>
 
+<!-- QUIZ VIEW -->
+<div id="view-quiz" class="view">
+  <div class="quiz-header">
+    <h2 id="quiz-title"></h2>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="score-badge" id="score-display">Score: 0 / 0</div>
+  </div>
+  <div id="quiz-content"></div>
+  <div class="submit-bar">
+    <button class="btn-primary" id="submit-btn" onclick="submitQuiz()">Submit &amp; See Results</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     PAGE: QUIZ
-═══════════════════════════════════════════════════════════ -->
-<div id="page-quiz" class="page">
-  <div class="container">
-
-    <div class="quiz-header">
-      <h2>Web Midterm Quiz</h2>
-      <div class="timer">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <span id="timer-display">00:00</span>
-      </div>
-      <span style="font-size:.85rem; color:var(--text-muted);" id="q-counter">Question 1 of 20</span>
-    </div>
-
-    <div class="progress-wrap">
-      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
-    </div>
-
-    <div id="question-card" class="question-card"></div>
-
-    <div class="quiz-nav">
-      <button class="btn btn-secondary" id="btn-prev">← Previous</button>
-      <button class="btn btn-primary"   id="btn-next">Next →</button>
-    </div>
-
+<!-- RESULT VIEW -->
+<div id="view-result" class="view">
+  <div class="result-card">
+    <div class="result-score" id="result-score"></div>
+    <div class="result-label" id="result-label"></div>
+    <div class="result-grade" id="result-grade"></div>
   </div>
+  <div class="quiz-actions">
+    <button class="btn-primary" onclick="retakeQuiz()">🔁 Retake Quiz</button>
+    <button class="btn-secondary" onclick="showHome()">🏠 Home</button>
+  </div>
+  <div id="result-review" style="margin-top:32px;"></div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     PAGE: RESULTS
-═══════════════════════════════════════════════════════════ -->
-<div id="page-results" class="page">
-  <div class="container">
-
-    <div class="results-header">
-      <div class="score-circle" id="score-circle">
-        <span class="score-number" id="score-number">0%</span>
-      </div>
-      <h1 style="margin-bottom:.4rem;">Quiz Complete!</h1>
-      <p class="results-sub" id="results-summary"></p>
-
-      <div class="results-breakdown">
-        <div class="breakdown-card good">
-          <div class="num" id="result-correct">0</div>
-          <div class="lbl">Correct</div>
-        </div>
-        <div class="breakdown-card bad">
-          <div class="num" id="result-wrong">0</div>
-          <div class="lbl">Incorrect</div>
-        </div>
-        <div class="breakdown-card">
-          <div class="num" id="result-skipped">0</div>
-          <div class="lbl">Skipped</div>
-        </div>
-        <div class="breakdown-card">
-          <div class="num" id="result-time">00:00</div>
-          <div class="lbl">Time Taken</div>
-        </div>
-      </div>
-
-      <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
-        <button class="btn btn-primary"   id="btn-restart">🔀 New Quiz</button>
-        <button class="btn btn-secondary" id="btn-home">🏠 Home</button>
-      </div>
-    </div>
-
-    <div class="review-section">
-      <h2 style="margin-bottom:1.2rem;">Question Review</h2>
-      <div id="review-list"></div>
-    </div>
-
-  </div>
-</div>
-
-<!-- Scripts -->
-<script src="questions.js"></script>
-<script src="quiz.js"></script>
 <script>
-  document.getElementById('nav-home-link').addEventListener('click', e => {
-    e.preventDefault();
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-home').classList.add('active');
-    window.scrollTo({ top: 0 });
-  });
-  document.getElementById('nav-start-link').addEventListener('click', e => {
-    e.preventDefault();
-    document.getElementById('btn-start').click();
-  });
-</script>
+// ═══════════════════════════════════════════════════════
+// QUESTION BANK
+// ═══════════════════════════════════════════════════════
+const MODULES = {
+  8: {
+    name: "Module 8: Windows Server Security",
+    mc: [
+      { q:"Where can you view locally configured user rights in the local Group Policy (GPO) object?", opts:["Computer Configuration > Windows Settings > Security Settings > Local Policies > User Rights Assignment","Computer Configuration > Administrative Templates > Security","User Configuration > Windows Settings > Security Settings","Computer Configuration > Software Settings > Security"], ans:0 },
+      { q:"What does the Protected Users group primarily protect against?", opts:["File system encryption issues","Credential theft and authentication delegation attacks","Network firewall misconfigurations","Disk quota overruns"], ans:1 },
+      { q:"What is NTLM?", opts:["A network tunneling protocol","NT LAN Manager — a suite of Microsoft security protocols for authentication","A type of network firewall","Network Traffic Load Manager"], ans:1 },
+      { q:"What port does LDAPS use?", opts:["389","443","636","3389"], ans:2 },
+      { q:"What does LAPS stand for?", opts:["Local Authentication Policy System","Local Administrator Password Solution","Lightweight Access Policy Service","LAN Authentication Protocol Suite"], ans:1 },
+      { q:"What does hardening a Windows Server mean?", opts:["Physically securing the server hardware","Increasing RAM and CPU resources","Reducing the attack surface by disabling unnecessary features and applying security policies","Installing hardware firewalls"], ans:2 },
+      { q:"What is Windows Defender Credential Guard?", opts:["A password manager application","Uses virtualization-based security to isolate secrets so only privileged system software can access them","A network authentication service","An antivirus scanning program"], ans:1 },
+      { q:"What is a Privileged Access Workstation (PAW)?", opts:["A server used for backup purposes","A dedicated workstation used only for administrative tasks to reduce exposure to threats","A virtual machine for application testing","A managed network switch"], ans:1 },
+      { q:"What two files are installed in %SystemRoot%\\PolicyDefinitions when LAPS is installed?", opts:["AdmPwd.admx and AdmPwd.adml","laps.dll and laps.exe","laps.msi and laps.cab","laps.xml and laps.config"], ans:0 },
+      { q:"What is a JEA endpoint?", opts:["Java Enterprise Application endpoint","Just Enough Administration endpoint — limits PowerShell session capabilities to specific roles","A network connection point for VPNs","A firewall rule for remote administration"], ans:1 },
+      { q:"What is SMB?", opts:["Server Management Bus","Server Message Block — a network file sharing protocol","Secure Mail Broker","System Monitoring Block"], ans:1 },
+      { q:"Which SMB version is the most secure?", opts:["SMB 1.0","SMB 2.0","SMB 3.0","SMB 3.1.1"], ans:3 },
+      { q:"Why should SMB 1.0 be disabled?", opts:["It uses too much bandwidth","It has serious security vulnerabilities including susceptibility to ransomware like WannaCry","It is significantly slower than other versions","It does not support file compression"], ans:1 },
+      { q:"What is WSUS?", opts:["Windows Server Update Services — manages Windows updates in an enterprise environment","Windows System User Services","Wireless Security Update System","Windows Server User Settings"], ans:0 },
+      { q:"What is Windows Update for Business?", opts:["A paid Microsoft support program","A cloud-based update management solution that uses Windows Update directly","A WSUS replacement intended for home users","A tool for manually installing updates on servers"], ans:1 },
+      { q:"What is LDAP primarily used for?", opts:["Loading applications remotely","Querying and modifying directory services like Active Directory","Encrypting network traffic end-to-end","Routing network packets between subnets"], ans:1 },
+      { q:"What port does standard (unencrypted) LDAP use?", opts:["389","443","636","3268"], ans:0 },
+      { q:"What is an authentication policy silo?", opts:["A container that stores encrypted credentials","A way to assign authentication policies to specific sets of user, service, and computer accounts","A tool that limits network bandwidth per user","A disk quota management object"], ans:1 },
+      { q:"Which of the following is an example of a problematic account in AD DS?", opts:["A standard user with no special permissions","A service account with a never-expiring password and Domain Admin rights","A regular computer account","A Group Policy Object"], ans:1 },
+      { q:"How can you connect to a JEA endpoint?", opts:["Using Remote Desktop Connection","Using Enter-PSSession or Invoke-Command with the -ConfigurationName parameter","Through a standard web browser","Using FTP client software"], ans:1 },
+      { q:"What does the Security Compliance Toolkit contain?", opts:["Firewall rule templates","Security baselines and tools to compare and apply security configurations","Antivirus definitions","Network monitoring utilities"], ans:1 },
+      { q:"Where does LAPS store local administrator passwords?", opts:["In the local SAM database only","As an attribute on the computer object in Active Directory","In a configuration file on the server","In Azure Key Vault automatically"], ans:1 },
+      { q:"What is an authentication policy?", opts:["A rule that enforces password complexity requirements","Controls where and how privileged accounts can authenticate, including allowed encryption types and device restrictions","A firewall rule for authentication traffic","A Group Policy setting for screen locking"], ans:1 },
+      { q:"Which version of NTLM is currently used for authentication requests?", opts:["NTLMv1","NTLMv2","NTLMv3","NTLM4"], ans:1 },
+      { q:"What does LDAPS provide over standard LDAP?", opts:["Faster directory query performance","LDAP over SSL/TLS providing encrypted communication","Load balancing for directory services","An automatic backup mechanism for LDAP"], ans:1 },
+      { q:"What is the primary purpose of the local administrator account?", opts:["Regular day-to-day user tasks","Recovery and local administration when domain connectivity is unavailable","Running scheduled background tasks","Installing applications automatically"], ans:1 },
+      { q:"Why should organizations implement LAPS?", opts:["To simplify login for standard users","To ensure each machine has a unique, automatically rotated local admin password","To disable the built-in local admin account","To synchronize passwords with Azure AD"], ans:1 },
+      { q:"A PAW is specifically designed to do what?", opts:["Replace the domain controller in small environments","Provide a secure, isolated workstation exclusively for privileged administrative tasks","Host web applications and services","Monitor network traffic and generate alerts"], ans:1 },
+      { q:"What security feature did SMB 3.0 add?", opts:["SSL certificate support","End-to-end encryption of file transfers","Kerberos-only authentication enforcement","Mandatory NTLM authentication"], ans:1 },
+      { q:"What is the main risk when adding users to the Protected Users group?", opts:["They immediately lose all network access","Some applications may break because NTLM, DES, and RC4 encryption are blocked","They can no longer change their own passwords","They lose access to all file shares"], ans:1 },
+      { q:"From where do WSUS clients receive updates?", opts:["Directly from the internet (Microsoft servers)","A central WSUS server on the internal network","A backup domain controller","A cloud service only"], ans:1 },
+      { q:"JEA role capabilities are defined using which file type?", opts:["Group Policy Objects","Role Capability files (.psrc)","Registry key settings","XML configuration files"], ans:1 },
+      { q:"What type of virtualization does Windows Defender Credential Guard use?", opts:["Type-1 Hypervisor isolation","Hyper-V Virtualization-Based Security (VBS)","VMware vSphere containers","Docker container virtualization"], ans:1 },
+      { q:"Why is locating problematic accounts in AD DS important?", opts:["It frees up Active Directory storage space","Unused or misconfigured accounts can be exploited by attackers to gain access","It improves overall network performance","It reduces licensing costs significantly"], ans:1 },
+      { q:"A JEA session configuration file has which extension?", opts:[".psrc",".pssc",".json",".xml"], ans:1 },
+      { q:"SMB 2.0 was introduced with which OS release?", opts:["Windows XP","Windows Vista and Windows Server 2008","Windows 7 and Windows Server 2008 R2","Windows 10"], ans:1 },
+      { q:"Why is LDAP without SSL/TLS considered insecure?", opts:["It produces slower query results","Credentials are sent in cleartext and can be intercepted","It offers the same security as LDAPS","It is only acceptable for internal use"], ans:1 },
+      { q:"Which accounts are typically added to the Protected Users group?", opts:["Standard users for extra protection","Guest accounts needing special handling","Highly privileged accounts such as Domain Admins","Service accounts that need NTLM authentication"], ans:2 },
+      { q:"How is LAPS deployed in an enterprise?", opts:["Manual installation on each client machine","Via Group Policy and the LAPS MSI/GPO extension","Through Windows Update automatically","Via Azure AD conditional access only"], ans:1 },
+      { q:"What does NTLMv2 improve over NTLMv1?", opts:["Replaces MD4 hashing with AES","Adds client/server challenges and session security to prevent replay attacks","Adds Kerberos support","Removes dependency on the SAM database"], ans:1 },
+      { q:"A JEA endpoint configuration is stored in which type of file?", opts:["An Active Directory attribute","A Session Configuration file (.pssc) registered with PowerShell remoting","A registry key","A Web.config file"], ans:1 },
+      { q:"What does SMB signing prevent?", opts:["Unauthorized file access by external users","Man-in-the-middle attacks by verifying the authenticity of SMB packets","Virus transmission through file shares","Bandwidth overuse by large file transfers"], ans:1 },
+      { q:"What does LAPS do automatically on a schedule?", opts:["Disables the local admin account entirely","Rotates the local administrator password on each managed machine","Syncs local accounts to Azure AD","Logs all local admin activity to a central server"], ans:1 },
+      { q:"Protected Users group members cannot authenticate using which protocols?", opts:["Kerberos AES encryption","NTLM, DES, or RC4","Smart card authentication","Standard domain account credentials"], ans:1 },
+      { q:"What is the main benefit of using LDAPS over standard LDAP?", opts:["Faster directory queries","Encryption of directory data in transit preventing eavesdropping","Support for more AD object types","Reduced load on domain controllers"], ans:1 },
+      { q:"Which tool lets you compare local security settings against a Microsoft-provided security baseline?", opts:["Task Manager","Security Compliance Toolkit","Event Viewer","Resource Monitor"], ans:1 },
+      { q:"Which SMB version introduced pre-authentication integrity and dialect negotiation?", opts:["SMB 2.0","SMB 3.0","SMB 3.1.1","SMB 1.0"], ans:2 },
+      { q:"What can an authentication policy restrict?", opts:["Which users can create Group Policy Objects","Which devices and services a privileged account can authenticate to","How many concurrent users can log in","Which applications users can install"], ans:1 },
+      { q:"What is the purpose of a PAW in relation to phishing attacks?", opts:["It blocks all email on the administrative workstation","By being isolated from regular browsing and email, a PAW reduces the risk of credential theft via phishing","It scans attachments automatically","It requires two-factor authentication for email"], ans:1 },
+      { q:"WSUS allows administrators to do which of the following?", opts:["Approve and deploy specific updates to specific groups of computers on a controlled schedule","Force all computers to update simultaneously","Disable Windows Update permanently","Test updates on virtual machines only"], ans:0 },
+    ],
+    written: [
+      { q:"What is the Protected Users group and what types of users would typically be added to it?", a:"The Protected Users group is a security group in Active Directory that provides additional protections against credential theft. It blocks NTLM, DES, and RC4 authentication and prevents credential caching and delegation. Highly privileged accounts like Domain Admins, Enterprise Admins, and other sensitive admin accounts are typically added." },
+      { q:"What is Windows Defender Credential Guard and how does it protect credentials?", a:"Credential Guard uses Hyper-V Virtualization-Based Security (VBS) to isolate the LSASS process in a protected virtual container. This means even if an attacker gains admin access to the OS, they cannot extract credential hashes from LSASS (stopping tools like Mimikatz)." },
+      { q:"What is LAPS and why should organizations implement it?", a:"LAPS (Local Administrator Password Solution) automatically manages and rotates unique local administrator passwords for each domain-joined computer, storing them securely in Active Directory. Organizations use it to prevent pass-the-hash lateral movement attacks where a shared local admin password could compromise many machines." },
+      { q:"What is a Privileged Access Workstation (PAW) and what is its purpose?", a:"A PAW is a dedicated, hardened workstation used exclusively for administrative tasks. It is isolated from internet browsing, email, and regular user activity to reduce the risk of credential theft or malware. Admins use a PAW to manage servers and AD, keeping privileged credentials away from high-risk environments." },
+      { q:"What is a JEA endpoint and how can you connect to it?", a:"A JEA (Just Enough Administration) endpoint is a constrained PowerShell remoting session that limits what cmdlets and scripts a user can run, applying least-privilege to administrative tasks. You connect using Enter-PSSession or Invoke-Command with the -ConfigurationName parameter specifying the JEA endpoint name." },
+      { q:"List and briefly describe the SMB versions.", a:"SMB 1.0 – Original version, has severe vulnerabilities (used in WannaCry), should be disabled. SMB 2.0 – Introduced with Vista/Server 2008, improved performance and reduced chattiness. SMB 2.1 – Minor improvements for Windows 7/Server 2008 R2. SMB 3.0 – Added end-to-end encryption, multichannel, and Hyper-V improvements. SMB 3.1.1 – Added pre-authentication integrity and mandatory secure negotiation, current most secure version." },
+      { q:"What is WSUS and how does it differ from Windows Update for Business?", a:"WSUS (Windows Server Update Services) is an on-premises server role that downloads updates from Microsoft and lets admins approve and deploy them to managed computers. Windows Update for Business is a cloud-based solution where clients update directly from Microsoft's cloud using policies — no on-premises server required." },
+      { q:"What is LDAPS and what port does it use?", a:"LDAPS is LDAP over SSL/TLS, which encrypts directory communication between clients and domain controllers. It runs on port 636. Standard LDAP (port 389) transmits data including credentials in cleartext, making LDAPS essential for secure environments." },
+      { q:"What does it mean to harden a Windows Server?", a:"Hardening means reducing the attack surface of the server by disabling unnecessary services and features, applying security baselines, configuring strong authentication, ensuring updates are applied, limiting user rights, enabling auditing, and following best practices like those in the CIS Benchmark or Microsoft Security Compliance Toolkit." },
+      { q:"What is an authentication policy silo and how does it work with authentication policies?", a:"An authentication policy silo groups related accounts (users, services, computers) and assigns authentication policies to them as a unit. Authentication policies define the allowed encryption types and which devices accounts can authenticate from. Together, silos restrict where and how privileged accounts can be used, limiting lateral movement." },
+      { q:"Why is it important to locate problematic accounts in AD DS?", a:"Stale, unused, or misconfigured accounts (e.g., accounts with passwords that never expire, orphaned service accounts, or accounts with excessive rights) can be exploited by attackers. Regularly auditing AD for these accounts and remediating them reduces the attack surface." },
+      { q:"What is NTLM and which version is currently used?", a:"NTLM (NT LAN Manager) is a suite of Microsoft authentication protocols using a challenge-response mechanism. NTLMv2 is the current version and adds client and server challenges plus session security. Kerberos is preferred, but NTLM is still used as a fallback in many environments." },
+      { q:"Where can you view locally configured user rights in a GPO?", a:"In the Local Group Policy Editor (gpedit.msc), navigate to: Computer Configuration > Windows Settings > Security Settings > Local Policies > User Rights Assignment. This shows rights like 'Log on locally', 'Allow log on through Remote Desktop Services', etc." },
+      { q:"What does the Security Compliance Toolkit contain and how is it used?", a:"The Security Compliance Toolkit (SCT) is a free Microsoft tool containing pre-built security baselines (GPO settings) for Windows Server, Windows client, and Microsoft 365. Admins use the Policy Analyzer tool included in the SCT to compare current settings against the baseline and identify gaps." },
+      { q:"What are the risks of adding accounts to the Protected Users group?", a:"Members of Protected Users cannot use NTLM, DES, or RC4, cannot have credentials cached, and cannot use Kerberos unconstrained delegation. Applications that rely on these features may break. It is critical to test thoroughly before adding service accounts or applications that depend on these authentication methods." },
+      { q:"What is NTLMv2 and how does it improve on NTLMv1?", a:"NTLMv2 improves on NTLMv1 by adding a client challenge alongside the server challenge, making offline brute-force and replay attacks harder. It also introduces session security with message signing and encryption, providing integrity and confidentiality for NTLM-authenticated sessions." },
+      { q:"How is LAPS deployed in an enterprise environment?", a:"LAPS is deployed by: 1) Extending the AD schema to add the ms-Mcs-AdmPwd attribute; 2) Installing the LAPS MSI on client machines via Group Policy software deployment; 3) Configuring a GPO to enable LAPS and set password policies; 4) Setting AD permissions so computers can write their own password and authorized users can read it." },
+      { q:"What is SMB signing and why is it important?", a:"SMB signing adds a digital signature to each SMB packet, verifying it came from the correct sender and hasn't been modified. This prevents man-in-the-middle attacks where an attacker intercepts and modifies file-sharing traffic. It is especially important for domain controllers where SMB signing is required by default." },
+      { q:"What is the difference between a JEA role capability file and a session configuration file?", a:"A Role Capability file (.psrc) defines WHAT a user can do in a JEA session — which cmdlets, functions, and scripts are available to them. A Session Configuration file (.pssc) defines HOW the session is set up — which roles apply to which users, run-as account, language mode, etc. The .pssc is registered with PowerShell remoting." },
+      { q:"What are the two files installed in PolicyDefinitions when LAPS is deployed, and what do they do?", a:"AdmPwd.admx and AdmPwd.adml are installed. These are Group Policy Administrative Template files that add LAPS-specific Group Policy settings to the GPMC, allowing admins to configure LAPS behaviour (password length, complexity, expiration age) via Group Policy." },
+    ]
+  },
 
+  9: {
+    name: "Module 9: Remote Desktop Services",
+    mc: [
+      { q:"What is RDS (Remote Desktop Services)?", opts:["Remote Data Synchronization service","A Windows Server role providing multi-user remote desktop and application access","A Remote DNS configuration service","Redundant Domain System for failover"], ans:1 },
+      { q:"What is the Remote Desktop feature (built-in, not the RDS role)?", opts:["A server role for hosting multiple users","A built-in Windows feature allowing one or two remote connections to a single machine","A VPN tunnel service","A web-based access portal for applications"], ans:1 },
+      { q:"What does RDC stand for?", opts:["Remote Desktop Controller","Remote Desktop Connection — the client application used to connect to remote sessions","Remote Domain Controller","Redundant Data Center"], ans:1 },
+      { q:"What is RD Web Access?", opts:["A VPN tunnel for remote access","A web portal allowing users to access RemoteApp programs and remote desktops through a browser","A firewall service for RDS","A DNS service for Remote Desktop resolution"], ans:1 },
+      { q:"What is the RD Session Broker?", opts:["Monitors session performance in real time","Manages and distributes connections in a load-balanced RDS farm","Provides licensing compliance for RDS","Controls bandwidth allocation for sessions"], ans:1 },
+      { q:"What is RD Gateway?", opts:["Provides internet access to RDS servers","Allows authorized remote users to connect to internal RDS resources over HTTPS using SSL/TLS","Manages RDS client access licenses","Provides DNS resolution for Remote Desktop"], ans:1 },
+      { q:"What is RDS licensing?", opts:["Software licenses for the Remote Desktop Connection client app","Client Access Licenses (CALs) required for each user or device connecting to RDS","A service for managing user accounts on RDS","A tool for monitoring active RDS sessions"], ans:1 },
+      { q:"What is a .rdp file?", opts:["A certificate file for RDS security","A configuration file storing Remote Desktop connection settings like server address and display options","A log file capturing Remote Desktop session activity","A server configuration template file"], ans:1 },
+      { q:"What is Azure Virtual Desktop (AVD)?", opts:["A physical server management service in Azure","A cloud-based desktop and app virtualization service hosted entirely in Azure","A backup service for on-premises virtual machines","An on-premises virtualization platform from Microsoft"], ans:1 },
+      { q:"What is the key difference between session-based and VM-based Remote Desktop?", opts:["Session-based uses physical hardware while VM-based uses virtual machines","Session-based shares one server's resources among multiple users; VM-based gives each user their own dedicated VM","Session-based is cloud-based while VM-based is always on-premises","Session-based uses Windows 10 while VM-based requires Windows Server"], ans:1 },
+      { q:"What are pooled virtual desktops in AVD?", opts:["Dedicated VMs permanently assigned to specific users","Shared VMs that any user can connect to; personal data is stored separately in profiles","Physical desktops placed in a shared pool","Desktops reserved exclusively for administrators"], ans:1 },
+      { q:"What are personal virtual desktops in AVD?", opts:["VMs shared among many users for efficiency","Dedicated VMs permanently assigned to specific users who need persistent environments","VMs used only for testing and development","VMs that reset to a clean state after each session"], ans:1 },
+      { q:"On which port does RDP (Remote Desktop Protocol) operate by default?", opts:["443","3389","8080","22"], ans:1 },
+      { q:"What RDS role service manages session reconnection and load balancing?", opts:["RD Gateway","RD Session Broker","RD Web Access","RD Licensing"], ans:1 },
+      { q:"RD Gateway uses which protocol to tunnel RDP traffic securely?", opts:["L2TP/IPsec","HTTPS (SSL/TLS) over port 443","PPTP","IPsec only"], ans:1 },
+      { q:"What is a RemoteApp?", opts:["An application running locally connecting to a remote database","An application running on an RDS server that appears to run locally on the user's desktop","A web application accessible from any browser","A mobile app for managing Windows servers"], ans:1 },
+      { q:"What are the two types of RDS Client Access Licenses (CALs)?", opts:["Admin CAL and User CAL","Per User CAL and Per Device CAL","Session CAL and Desktop CAL","Standard CAL and Enterprise CAL"], ans:1 },
+      { q:"The RD Session Broker is needed in which scenario?", opts:["A single server RDS deployment","An RDS farm with multiple Session Hosts for load balancing and high availability","A cloud-only deployment using AVD","Single user Remote Desktop connections"], ans:1 },
+      { q:"What component actually hosts user sessions in session-based RDS?", opts:["RD Gateway","RD Session Host","RD Broker","RD Web Access"], ans:1 },
+      { q:"How does Azure Virtual Desktop primarily differ from traditional on-premises RDS?", opts:["AVD does not support Windows desktop applications","AVD is a fully managed cloud service — Microsoft manages the control plane and infrastructure","AVD does not use virtual machines at all","AVD only supports single-session desktop scenarios"], ans:1 },
+      { q:"Which RDS component requires SSL certificates for secure browser-based access?", opts:["RD Session Host","RD Web Access","RD Session Broker","RD Licensing"], ans:1 },
+      { q:"What is the primary use case for a personal virtual desktop over a pooled desktop?", opts:["Users who need a fresh, clean desktop every session","Users who need persistent customizations, installed apps, and dedicated resources","Call center workers running identical standard applications","Users with minimal computing requirements"], ans:1 },
+      { q:"What information can an .rdp file store?", opts:["Installation scripts for remote software","Connection settings like server address, display resolution, and local resource redirection options","User account management settings","Firewall rule configurations"], ans:1 },
+      { q:"Which component tracks and issues RDS licenses to connecting clients?", opts:["RD Gateway","RD Licensing Server","RD Session Broker","RD Web Access"], ans:1 },
+      { q:"The Remote Desktop feature (not RDS) is limited to how many concurrent connections by default?", opts:["One administrative session only","Two concurrent connections","Five concurrent connections","Unlimited connections"], ans:1 },
+      { q:"VM-based RDS requires what underlying technology?", opts:["Only the RD Session Host role","A hypervisor such as Hyper-V to host individual user VMs","Physical desktops for each user","An Azure subscription only"], ans:1 },
+      { q:"RemoteApp programs are published and hosted from which RDS component?", opts:["RD Web Access","RD Session Host","RD Gateway","RD Licensing"], ans:1 },
+      { q:"Which scenario is BEST suited for session-based RDS?", opts:["Engineers needing high-performance dedicated GPU workstations","Call center workers running identical standard applications efficiently","Executives needing full persistent desktop control","Developers needing isolated custom environments"], ans:1 },
+      { q:"In AVD, connection brokering is handled by:", opts:["An on-premises Active Directory server","Azure's built-in managed connection broker service","A dedicated RD Broker VM you deploy","Local DNS round-robin"], ans:1 },
+      { q:"What does RD Gateway enable that direct RDP does not?", opts:["Faster session performance","Secure external RDP access without requiring a VPN, using HTTPS port 443","Automatic load balancing across Session Hosts","Free RDS licensing for external users"], ans:1 },
+      { q:"What is required legally to run RDS for multiple concurrent users?", opts:["Only a standard Windows Server license","RDS Client Access Licenses (CALs) in addition to the Windows Server license","A separate Azure subscription","VPN licenses for each remote user"], ans:1 },
+      { q:"Session-based desktops are more cost-effective when:", opts:["Users need dedicated resources and custom configurations","Many users run similar tasks and resource sharing is acceptable","Users need persistent VM state between sessions","High-performance GPU applications are required"], ans:1 },
+      { q:"AVD supports Windows multi-session, which means:", opts:["Multiple physical monitors per user","Multiple users can share one Windows VM simultaneously","Multiple domains can connect to the same VM","Multiple applications run in parallel on the local machine"], ans:1 },
+      { q:"RDS can provide access to:", opts:["Only full remote desktops","Both full remote desktops and individual RemoteApp applications","Only command-line sessions","Only web-based applications"], ans:1 },
+      { q:"The RD Session Broker helps users reconnect by:", opts:["Caching their session graphics locally","Remembering which Session Host a user's session is on and routing reconnections there","Automatically updating software during reconnection","Issuing a new license for each reconnection"], ans:1 },
+      { q:"A key advantage of AVD over traditional on-premises RDS is:", opts:["Always lower total cost of ownership","No infrastructure management plane to maintain — Microsoft handles it","AVD does not require Azure Active Directory","AVD does not have licensing requirements"], ans:1 },
+      { q:"RD Web Access connects to clients over which port?", opts:["3389","443","80","8080"], ans:1 },
+      { q:"What benefit does RD Web Access provide over configuring direct RDP connections?", opts:["Faster session performance","Browser-based access to resources without needing to pre-configure an RDP client","Stronger security than direct RDP connections","Works only on non-Windows clients"], ans:1 },
+      { q:"Personal desktops in AVD are best used when:", opts:["Users need the same generic desktop environment","Users need a persistent, individually customizable environment","Reducing infrastructure costs is the primary goal","Users only need to run a single published application"], ans:1 },
+      { q:"The primary protocol used by Remote Desktop is:", opts:["VNC","RDP (Remote Desktop Protocol)","SSH","HTTP/HTTPS"], ans:1 },
+      { q:"RDS roles can be deployed:", opts:["Only on a single server","Distributed across multiple servers for scalability and high availability","Only in Azure","Only in a workgroup (non-domain) environment"], ans:1 },
+      { q:"Which RDS component would you configure to control which users can access which internal resources from the internet?", opts:["RD Session Host","RD Gateway Resource Authorization Policies (RD RAP)","RD Licensing Server","RD Session Broker"], ans:1 },
+      { q:"What happens when an RDS Session Host crashes in a load-balanced farm?", opts:["All users in the entire farm lose their sessions permanently","Only users on that Session Host lose their sessions; the broker routes new connections to healthy hosts","The RD Licensing server takes over session hosting","RD Web Access automatically restarts the failed host"], ans:1 },
+      { q:"Which RDS component is optional for small single-server deployments but required for large farms?", opts:["RD Session Host","RD Session Broker","RD Web Access","RD Licensing"], ans:1 },
+      { q:"RD Licensing can be configured in which two modes?", opts:["Admin mode and User mode","Per User and Per Device","Enterprise and Standard","Online and Offline"], ans:1 },
+      { q:"What type of network connection does RD Gateway replace the need for?", opts:["A dedicated leased line","A VPN connection for external RDP access","A site-to-site MPLS connection","A dial-up connection"], ans:1 },
+      { q:"In a quick desktop scenario for a task worker, which AVD desktop type is more appropriate?", opts:["Personal desktop","Pooled desktop","Hybrid desktop","Persistent desktop"], ans:1 },
+      { q:"The RD Session Host role is what type of server role?", opts:["A network infrastructure role","An application host role that provides the desktop/application environment to remote users","A directory services role","A security boundary role"], ans:1 },
+      { q:"RemoteApp differs from a full remote desktop in that:", opts:["RemoteApp uses a different protocol","The RemoteApp window appears as a regular window on the local desktop without the full desktop background","RemoteApp requires more bandwidth","RemoteApp only works on mobile devices"], ans:1 },
+      { q:"What is the minimum license needed to host sessions for external contractors in RDS?", opts:["Windows Server Standard only","Windows Server license plus RDS External Connector license or per-user CALs","Azure AD P1 license","Remote Desktop subscription from Microsoft Store"], ans:1 },
+    ],
+    written: [
+      { q:"What is the difference between RDS and the built-in Remote Desktop feature?", a:"The Remote Desktop feature allows one or two remote admin connections to a single machine and is for management purposes. RDS is a full server role that allows many concurrent users to access remote desktops or published applications (RemoteApps), requires CALs, and includes additional components like Session Broker, Gateway, Licensing, and Web Access." },
+      { q:"What is the RD Session Broker and when is it needed?", a:"The RD Session Broker manages connections in an RDS farm with multiple Session Hosts. It load-balances new connections across available hosts and, crucially, tracks existing sessions so disconnected users are reconnected to the correct Session Host where their session is still running. It is needed whenever you have more than one Session Host." },
+      { q:"What is RD Gateway and why is it useful?", a:"RD Gateway is an RDS role service that tunnels RDP connections inside HTTPS (port 443) using SSL/TLS. This allows external users to connect to internal RDS resources securely over the internet without a VPN. It also enforces connection authorization policies controlling who can connect to which resources." },
+      { q:"What are the differences between pooled and personal virtual desktops in AVD?", a:"Pooled desktops are shared — any user gets whichever available VM is free; personal data is stored in separate FSLogix profiles. Personal desktops are permanently assigned to one user, who always gets the same VM. Pooled is more cost-efficient for generic task workers; personal is better for users needing a persistent, customized environment." },
+      { q:"What is RDS licensing and why is it required?", a:"RDS requires Client Access Licenses (CALs) for each user or device connecting to a Session Host. There are Per User and Per Device CALs. Without proper licensing, RDS will only grant connections for a 120-day grace period. A Licensing Server must be configured and activated to track and issue CALs." },
+      { q:"What is RD Web Access and what does it provide to users?", a:"RD Web Access is a web-based portal (IIS-hosted) that presents users with a list of published RemoteApp programs and remote desktops they have access to. Users can access it from any browser without pre-configuring an RDP client, and clicking a resource launches the connection automatically." },
+      { q:"What is a .rdp file and what information can it contain?", a:"A .rdp file is a text-based configuration file for Remote Desktop connections. It stores settings like the target server address, display resolution, which local resources (drives, printers, clipboard) to redirect, authentication settings, and gateway information. It can be saved and distributed so users connect without manually configuring settings." },
+      { q:"What is Azure Virtual Desktop and how does it differ from on-premises RDS?", a:"AVD is a fully managed, cloud-based desktop and app virtualization service in Azure. Unlike on-premises RDS where you manage all server roles (broker, gateway, licensing, session hosts), in AVD Microsoft manages the control plane. You only manage the session host VMs and user access. AVD also natively supports Windows multi-session." },
+      { q:"Describe session-based vs VM-based Remote Desktop.", a:"Session-based RDS: multiple users share the OS and resources of one RD Session Host server. Cost-efficient, good for standardized tasks. VM-based: each user gets their own dedicated virtual machine via Hyper-V or AVD. More resource-intensive but provides full isolation, personalization, and is better for power users." },
+      { q:"What are RemoteApp programs and how do they appear to the user?", a:"RemoteApp programs are applications published from an RD Session Host that run on the server but appear as normal windows on the user's local desktop — without showing the full remote desktop. The user interacts with the app as if it's local. This is useful for publishing a single line-of-business app without a full desktop." },
+      { q:"What is the RD Session Host?", a:"The RD Session Host is the core RDS role service that hosts the actual user desktop sessions and RemoteApp programs. It is the server users connect to when using session-based RDS. Multiple Session Hosts can be deployed in a farm managed by the Session Broker for load balancing and redundancy." },
+      { q:"What are the two types of RDS CALs?", a:"Per Device CAL: a single license for a device, allowing any user on that device to connect to RDS. Per User CAL: a single license for a user, allowing them to connect from any device. Per Device is better when one device is shared by many users (e.g., shift workers); Per User is better when users connect from multiple devices." },
+      { q:"How does the RD Session Broker handle user reconnection?", a:"The RD Session Broker maintains a database of active sessions and which Session Host they are on. When a user disconnects and reconnects, the broker queries its database, finds the user's existing session, and directs the new connection to the correct Session Host — so the user resumes exactly where they left off." },
+      { q:"What security mechanism does RD Gateway use and what does it enforce?", a:"RD Gateway uses SSL/TLS over HTTPS (port 443) to encrypt the RDP tunnel. It enforces two types of policies: Connection Authorization Policies (CAPs) — who is allowed to connect through the gateway; and Resource Authorization Policies (RAPs) — which internal resources (computers) they can connect to." },
+      { q:"What are three differences between RDS and the Remote Desktop feature?", a:"1) RDS supports many concurrent users simultaneously; Remote Desktop feature supports only 1-2 admin connections. 2) RDS requires CALs; Remote Desktop feature does not for the 2 allowed connections. 3) RDS includes extra components (Session Broker, Gateway, Licensing, Web Access); Remote Desktop is a simple single-server feature with no additional roles." },
+    ]
+  },
+
+  10: {
+    name: "Module 10: Remote Access & Web Services",
+    mc: [
+      { q:"What does RRAS stand for?", opts:["Remote Routing and Access Service","Routing and Remote Access Service","Remote Resource Access System","Routing and Resource Allocation Service"], ans:1 },
+      { q:"What is a VPN?", opts:["A Virtual Private Network creating an encrypted tunnel over a public network","A Virtual Printing Network for remote printers","A verified public network for enterprise use","A Virtual Protocol Node in routing"], ans:0 },
+      { q:"Which VPN protocol is considered largely deprecated due to serious security weaknesses?", opts:["IKEv2","SSTP","PPTP","L2TP/IPsec"], ans:2 },
+      { q:"What does SSTP stand for?", opts:["Secure Sockets Tunneling Protocol","Simple Server Transfer Protocol","Secure Session Transfer Protocol","System Socket Tunneling Protocol"], ans:0 },
+      { q:"What is NPS (Network Policy Server)?", opts:["A network proxy service","Microsoft's implementation of a RADIUS server for centralized AAA","A network path scanning utility","A network print management service"], ans:1 },
+      { q:"What does RADIUS stand for?", opts:["Remote Authentication Dial-In User Service","Random Access Directory Interface Utility Service","Remote Access Data Integration User System","Routing and Direct In-User Service"], ans:0 },
+      { q:"What is Always On VPN?", opts:["A VPN requiring manual connection initiation each time","A solution providing automatic, seamless VPN connectivity before and after user logon","A VPN only available for mobile devices","A hardware VPN appliance from Microsoft"], ans:1 },
+      { q:"What is WAP (Web Application Proxy)?", opts:["A web content caching server","A reverse proxy allowing external access to internal web applications with pre-authentication","A VPN concentrator device","A network load balancer"], ans:1 },
+      { q:"What is IIS?", opts:["Internal IP Service","Internet Information Services — Microsoft's web server platform","Integrated Identity Service","Internal Infrastructure Service"], ans:1 },
+      { q:"Which authentication protocol transmits credentials in cleartext?", opts:["CHAP","EAP","PAP","MS-CHAPv2"], ans:2 },
+      { q:"What does EAP stand for?", opts:["Enhanced Authentication Protocol","Extensible Authentication Protocol","External Access Protocol","Encrypted Authentication Procedure"], ans:1 },
+      { q:"IKEv2 offers which advantage for mobile users?", opts:["No encryption overhead","Fast reconnection (MOBIKE) when switching between networks like WiFi to cellular","Native compatibility with all operating systems","Uses port 80 for easy firewall traversal"], ans:1 },
+      { q:"What is PKI?", opts:["Public Key Infrastructure — a framework for managing digital certificates and trust","Private Key Index","Packet Key Interface","Public Knowledge Index"], ans:0 },
+      { q:"L2TP/IPsec combines which two protocols?", opts:["Layer 2 Tunneling Protocol + Internet Protocol Security","LDAP 2 Tunneling Protocol + IPsec","Layer 3 Transfer Protocol + Internet Protocol Security","LDAP Transfer + IP Security"], ans:0 },
+      { q:"What is an application pool in IIS?", opts:["A group of web applications sharing a server","An isolated worker process running one or more web applications for stability and security isolation","A load-balanced cluster of IIS servers","A collection of SSL certificates"], ans:1 },
+      { q:"What does NPS/RADIUS primarily provide?", opts:["DNS resolution for VPN clients","Centralized authentication, authorization, and accounting (AAA) for network access","DHCP services for VPN clients","File sharing for remote users"], ans:1 },
+      { q:"Always On VPN supports which two connection types?", opts:["Site-to-site and point-to-site","Device tunnel (connects before user logon) and user tunnel (connects after user logon)","Wired and wireless","LAN and WAN"], ans:1 },
+      { q:"SSTP uses which port, allowing it to traverse most firewalls?", opts:["1723","500","443","1194"], ans:2 },
+      { q:"Which VPN authentication protocol uses a challenge-response mechanism?", opts:["PAP","CHAP","EAP-TLS certificate","None of the listed protocols"], ans:1 },
+      { q:"What does WAP use to authenticate users before proxying requests?", opts:["Local Windows user accounts","AD FS (Active Directory Federation Services) pre-authentication","Anonymous authentication only","RADIUS server authentication"], ans:1 },
+      { q:"What type of certificate does a VPN server typically require?", opts:["A code signing certificate","A server authentication certificate issued by a trusted CA","An email encryption S/MIME certificate","A client authentication certificate only"], ans:1 },
+      { q:"PPTP uses which port for its control connection?", opts:["443","1723","500","1701"], ans:1 },
+      { q:"Which VPN protocol is natively supported by Windows, uses SSL, and doesn't require extra client software?", opts:["PPTP","L2TP","IKEv2","SSTP"], ans:3 },
+      { q:"IIS application pools improve security by:", opts:["Encrypting all web traffic automatically","Running web applications in isolated processes so one crashing app doesn't affect others","Blocking malicious HTTP requests by default","Automatically applying security patches"], ans:1 },
+      { q:"What is the primary difference between Always On VPN and DirectAccess?", opts:["Always On VPN only works on Windows 10","Always On VPN uses standard industry VPN protocols while DirectAccess uses IPv6 and IPHTTPS","DirectAccess provides stronger encryption","Always On VPN requires Azure AD"], ans:1 },
+      { q:"What does MS-CHAPv2 add over basic CHAP?", opts:["Mutual authentication — the server also proves its identity to the client","Removes the need for certificates","Supports single sign-on automatically","Uses port 443 exclusively"], ans:0 },
+      { q:"NPS network policies are used to:", opts:["Set Windows Firewall rules","Define who can connect to the network, under what conditions, and with what constraints","Manage DNS zone records","Configure VPN encryption settings directly"], ans:1 },
+      { q:"What is a key benefit of WAP for publishing internal applications externally?", opts:["It provides additional storage for web content","External users access internal apps without exposing internal servers directly to the internet","It caches web content for faster page loading","It converts legacy desktop apps to modern web apps"], ans:1 },
+      { q:"Which VPN protocol is generally recommended for modern site-to-site VPN with Windows Server?", opts:["PPTP","SSTP","IKEv2","L2TP without IPsec"], ans:2 },
+      { q:"What role does IIS play in an Always On VPN deployment?", opts:["IIS hosts the VPN client download","IIS can host the Certificate Revocation List (CRL) distribution point for PKI","IIS manages VPN user account creation","IIS routes VPN tunnel traffic"], ans:1 },
+      { q:"EAP-TLS authenticates using:", opts:["Username and password only","Digital certificates for both the client and the server (mutual authentication)","One-time passwords via SMS","NTLM hashes"], ans:1 },
+      { q:"RRAS can function as which of the following?", opts:["Only a VPN server","A VPN server, a NAT router, or a dial-up access server","Only a network routing service","Only a RADIUS proxy"], ans:1 },
+      { q:"What is a Certificate Authority (CA) in PKI?", opts:["A server that assigns IP addresses to clients","A trusted entity that issues and signs digital certificates","A reverse proxy for web applications","A type of domain controller"], ans:1 },
+      { q:"IKEv2 is best suited for which users?", opts:["Users on legacy systems without modern protocol support","Mobile users who frequently switch between networks (MOBIKE reconnection)","Site-to-site connections only","Connections that don't require encryption"], ans:1 },
+      { q:"What does RADIUS accounting track?", opts:["Billing and user activity logs — session start/stop, data transferred","IP address assignments for clients","Certificate lifecycle management","Password synchronization across systems"], ans:0 },
+      { q:"What is a self-signed certificate?", opts:["A certificate signed by a public, trusted CA","A certificate signed by its own private key, not trusted by default in external environments","A certificate that never expires","A certificate used exclusively for code signing"], ans:1 },
+      { q:"Always On VPN requires which minimum Windows client version?", opts:["Windows 7 or later","Windows 10 version 1607 (Anniversary Update) or later","Windows 8.1 or later","Windows 11 only"], ans:1 },
+      { q:"IIS bindings determine:", opts:["Which server applications can be installed","Which IP addresses, ports, and host headers a website responds to","Which users are authorized to access the web server","The maximum number of concurrent connections"], ans:1 },
+      { q:"What advantage does L2TP/IPsec have over PPTP?", opts:["L2TP/IPsec has lower latency","L2TP/IPsec uses IPsec for strong encryption unlike PPTP's weak encryption","L2TP/IPsec requires fewer open firewall ports","L2TP/IPsec is simpler to configure"], ans:1 },
+      { q:"WAP requires which server role to be deployed?", opts:["DHCP Server","Active Directory Federation Services (AD FS)","WSUS","Remote Desktop Services"], ans:1 },
+      { q:"What is a virtual directory in IIS?", opts:["A directory that doesn't physically exist","A mapping that allows a website to serve content from a different physical location on disk or network","A hidden admin directory","A directory on a remote server accessed via SMB"], ans:1 },
+      { q:"NPS acts as a RADIUS server to authenticate which types of clients?", opts:["Only local Windows domain users","VPN, wireless, and 802.1X network access clients","Web application users only","Azure AD users only"], ans:1 },
+      { q:"PAP is considered insecure because:", opts:["It uses weak 56-bit encryption","Passwords are transmitted in cleartext with no encryption","It is not supported by Windows Server","It requires a client certificate"], ans:1 },
+      { q:"The user tunnel in Always On VPN:", opts:["Connects before user logon using machine credentials","Connects after user logon to provide user-level network access with user credentials","Is mandatory for all Always On VPN configurations","Uses only machine certificates for authentication"], ans:1 },
+      { q:"Which component of PKI is used to verify if a certificate has been revoked?", opts:["The CA server itself","CRL (Certificate Revocation List) or OCSP responder","The root certificate","The certificate template"], ans:1 },
+      { q:"SSTP is particularly useful in which scenario?", opts:["When maximum throughput with no overhead is needed","When connections must traverse restrictive firewalls where only port 443 is open","When mobile users switch networks frequently","When site-to-site tunnels with hardware appliances are needed"], ans:1 },
+      { q:"What does IIS use to separate and isolate different websites on the same server?", opts:["Separate virtual machines per site","Application pools and bindings (IP address, port, host header combinations)","DNS round-robin load balancing","Network VLANs"], ans:1 },
+      { q:"A RADIUS proxy is used to:", opts:["Cache authentication responses for faster logins","Forward authentication requests from NPS to other RADIUS servers for centralized auth","Decrypt VPN traffic for inspection","Issue SSL certificates to VPN clients"], ans:1 },
+      { q:"The Always On VPN device tunnel:", opts:["Requires user credentials to connect","Uses machine certificates and connects automatically before user logon for machine-level access","Is optional and rarely deployed in practice","Only supports the IKEv2 protocol on Linux clients"], ans:1 },
+      { q:"The main purpose of AD FS in a WAP deployment is:", opts:["To store and serve static web application files","To provide claims-based identity, federation, and single sign-on for published applications","To manage SSL certificate issuance","To handle network traffic routing"], ans:1 },
+    ],
+    written: [
+      { q:"What is a VPN and what are the different scenarios it can be set up in?", a:"A VPN (Virtual Private Network) creates an encrypted tunnel over the internet, allowing users to securely access internal network resources as if physically present. Scenarios: remote access VPN (individual users connecting to HQ from home), site-to-site VPN (connecting two office networks), and Always On VPN (automatic persistent connection for corporate devices)." },
+      { q:"What is Always On VPN and how does it differ from a traditional VPN?", a:"Always On VPN automatically connects without user intervention — it has a device tunnel that connects before logon (for machine-level access like domain authentication) and a user tunnel that connects after logon. Traditional VPNs require manual initiation. Always On VPN uses standard Windows VPN protocols, supports multi-factor authentication, and integrates with Intune/Group Policy." },
+      { q:"What are the different VPN tunneling protocol options in Windows Server?", a:"PPTP – deprecated, weak encryption, avoid. L2TP/IPsec – strong encryption using IPsec, widely supported, requires pre-shared key or certificates. SSTP – tunnels RDP over HTTPS/443, works through strict firewalls. IKEv2 – fast reconnection via MOBIKE, excellent for mobile users, strong security. Each offers different trade-offs in security, firewall compatibility, and mobile support." },
+      { q:"What is NPS and how does it relate to RADIUS?", a:"NPS (Network Policy Server) is Microsoft's implementation of a RADIUS (Remote Authentication Dial-In User Service) server. It provides centralized authentication, authorization, and accounting (AAA) for network access — including VPN, wireless, and 802.1X. NPS enforces network policies defining who can connect, using what methods, under what conditions." },
+      { q:"What is WAP and what are some of its benefits?", a:"WAP (Web Application Proxy) is a reverse proxy role in Windows Server that publishes internal applications to external users. Benefits: external access without exposing internal servers; integrates with AD FS for pre-authentication (only authenticated users can reach the app); supports pass-through, AD FS, and client certificate authentication." },
+      { q:"What is PKI and what are the different types of certificates?", a:"PKI (Public Key Infrastructure) is a framework of policies, roles, and technology for managing digital certificates and public-key encryption. Types: CA (Certificate Authority) certificate — the root/issuing trust anchor; SSL/TLS server certificates — authenticate servers; client certificates — authenticate users/devices; code signing certificates — verify software; email certificates (S/MIME) — secure email." },
+      { q:"What are application pools in IIS and why are they used?", a:"An application pool in IIS is an isolated worker process (w3wp.exe) that runs one or more web applications. Isolation means if one application crashes or is compromised, it doesn't affect applications in other pools. Each pool can run under different identity accounts (least privilege). Pools can also be configured with recycling schedules to maintain performance." },
+      { q:"What is RRAS and what roles can it serve?", a:"RRAS (Routing and Remote Access Service) is a Windows Server role that can function as: a VPN server (accepting remote access VPN connections), a network router (routing traffic between subnets), a NAT server (sharing an internet connection), a DirectAccess server, or a dial-up remote access server." },
+      { q:"Describe the main VPN authentication protocols: PAP, CHAP, MS-CHAPv2, and EAP.", a:"PAP – plaintext passwords, completely insecure, never use. CHAP – challenge-response, avoids sending the password but has weaknesses; server uses challenge to verify. MS-CHAPv2 – mutual challenge-response with server authentication, far more secure than CHAP. EAP – extensible framework supporting certificate-based (EAP-TLS), PEAP, and others; most secure and flexible option." },
+      { q:"What is the difference between the device tunnel and user tunnel in Always On VPN?", a:"Device tunnel: connects using machine certificates before any user logs in; provides machine-level access for things like domain authentication, GPO updates, and IT management. User tunnel: connects after user logon using user credentials or certificates; provides user-level access to resources. Device tunnel requires Windows 10 Enterprise." },
+      { q:"What is IIS and what are some key things you need to set up for a website?", a:"IIS (Internet Information Services) is Microsoft's web server platform for hosting websites, web apps, and services. Key setup items: creating a site with correct bindings (IP, port, hostname); configuring an application pool (identity, pipeline mode); adding SSL/TLS certificate; setting authentication (anonymous, Windows, Forms); configuring URL rewriting; enabling logging; setting appropriate file system permissions." },
+      { q:"What is SSTP and why is it useful for traversing restrictive firewalls?", a:"SSTP (Secure Sockets Tunneling Protocol) encapsulates PPP traffic inside an HTTPS (SSL/TLS) stream over port 443. Since port 443 is almost universally open (used for standard HTTPS web traffic), SSTP can traverse nearly any firewall or proxy without special configuration — making it ideal when other VPN protocols are blocked." },
+      { q:"What is IKEv2 and what advantage does it offer for mobile users?", a:"IKEv2 (Internet Key Exchange version 2) is a modern VPN protocol used with IPsec that supports MOBIKE (Mobility and Multihoming). MOBIKE allows the VPN connection to survive network changes — e.g., switching from WiFi to cellular — without re-establishing the tunnel. This makes it ideal for mobile users on laptops or phones." },
+      { q:"Describe the main security weaknesses of PPTP.", a:"PPTP (Point-to-Point Tunneling Protocol) is deprecated for several reasons: it uses MS-CHAPv2 which has known cryptographic weaknesses; the MPPE encryption it uses can be cracked; it is vulnerable to bit-flipping attacks; and various tools can break PPTP authentication offline. Modern protocols like IKEv2 or SSTP should replace PPTP." },
+      { q:"What is the role of AD FS when used with WAP?", a:"AD FS (Active Directory Federation Services) provides claims-based identity and federated single sign-on. When used with WAP, AD FS acts as the pre-authentication service — users must authenticate with AD FS before WAP forwards their request to the internal application. This ensures only authenticated and authorized users can reach published apps." },
+      { q:"What does a RADIUS server provide in a network?", a:"A RADIUS server provides AAA — Authentication (verifying user identity), Authorization (what the user is allowed to do/access), and Accounting (logging session activity). In Microsoft environments, NPS acts as the RADIUS server, centralizing policies for VPN, wireless, and 802.1X wired access across the network." },
+      { q:"What is EAP-TLS and how does it authenticate?", a:"EAP-TLS (EAP with Transport Layer Security) is the most secure EAP method, using X.509 digital certificates for mutual authentication. Both the client and server present certificates — the server proves its identity to the client and the client proves its identity to the server. This eliminates password-based attacks entirely." },
+      { q:"What is L2TP/IPsec and how does it improve over PPTP?", a:"L2TP (Layer 2 Tunneling Protocol) provides the tunnel but no encryption on its own; IPsec provides strong encryption (AES) and authentication. Together L2TP/IPsec creates an encrypted VPN far more secure than PPTP. The trade-off is it requires UDP ports 500, 1701, and 4500, which can be blocked by some NAT devices." },
+      { q:"What is a Certificate Revocation List (CRL) and why is it important?", a:"A CRL is a signed list published by a CA containing serial numbers of certificates that have been revoked before their expiration date. VPN servers, web browsers, and other clients check the CRL before trusting a certificate. If the certificate is on the CRL (e.g., because the private key was compromised), the connection is rejected." },
+      { q:"What mechanisms does IIS use in the background to run web applications?", a:"IIS uses a kernel-mode HTTP driver (HTTP.sys) that handles HTTP requests at the kernel level for performance. Application pools run as user-mode worker processes (w3wp.exe). IIS supports both Integrated and Classic pipeline modes for ASP.NET application processing. ISAPI extensions and modules handle specialized request processing (URL rewrite, authentication, compression, etc.)." },
+    ]
+  },
+
+  11: {
+    name: "Module 11: Server & Performance Monitoring",
+    mc: [
+      { q:"What is Task Manager primarily used for?", opts:["Configuring network settings and DNS","Quickly viewing real-time CPU, memory, disk, and network usage and managing processes","Managing Active Directory users and groups","Monitoring and filtering system event logs"], ans:1 },
+      { q:"What is Resource Monitor?", opts:["A hardware diagnostic and benchmarking tool","A detailed monitoring tool showing per-process resource usage including files, network, and disk I/O","A complete replacement for Task Manager","A storage provisioning and management utility"], ans:1 },
+      { q:"What is a performance baseline?", opts:["The minimum hardware required to run Windows Server","A record of normal system performance under typical workloads used as a reference for comparison","The default out-of-box performance settings in Windows","The theoretical maximum performance a system can achieve"], ans:1 },
+      { q:"What is Performance Monitor (PerfMon)?", opts:["A cloud-based monitoring service","A Windows tool for tracking detailed performance metrics (counters) in real time and over time","A hardware diagnostics utility for testing RAM and CPU","A network protocol analyzer"], ans:1 },
+      { q:"What is a Data Collector Set?", opts:["A group of physical hard drives in a storage pool","A defined collection of performance counters, event traces, and config data gathered on a configurable schedule","A set of event log entries exported for analysis","A scheduled backup configuration"], ans:1 },
+      { q:"What is Event Viewer?", opts:["A tool for monitoring live security camera feeds","A Windows tool for viewing and analyzing system, application, and security event logs","A network traffic monitoring application","A real-time performance graphing tool"], ans:1 },
+      { q:"What is a performance bottleneck?", opts:["A slow network connection to the internet","A resource that is consistently saturated and limiting overall system performance","A blocked firewall port preventing application access","A failing or overloaded power supply"], ans:1 },
+      { q:"What is Reliability Monitor?", opts:["A tool that measures CPU thermal stability","A tool displaying a timeline of system changes and failures to help diagnose stability issues over time","A backup job verification utility","A network uptime and SLA monitoring tool"], ans:1 },
+      { q:"What do event log subscriptions allow?", opts:["End users to subscribe to email notifications from the server","Centralized collection of event log entries from multiple remote computers to a single collector server","Automatic offsite backup of event logs","Per-user filtering of event log entries"], ans:1 },
+      { q:"What are performance counters?", opts:["Physical hardware benchmark scores","Numeric metrics measuring specific aspects of system performance (e.g., CPU%, available memory)","Important event log entries flagged for review","Alerts generated when hardware components fail"], ans:1 },
+      { q:"Which Event Viewer log would contain failed login attempt events?", opts:["Application log","System log","Security log","Setup log"], ans:2 },
+      { q:"Why is Task Manager typically the first monitoring tool an admin uses?", opts:["It provides the deepest and most detailed performance information","It offers a quick real-time overview accessible in seconds with minimal effort","It can automatically fix detected performance issues","It has the most comprehensive long-term logging"], ans:1 },
+      { q:"Resource Monitor is more useful than Task Manager when:", opts:["You just need a quick high-level overview","You need to identify exactly which processes are using specific files, network connections, or generating disk I/O","You want to quickly end a runaway process","You only need total CPU percentage"], ans:1 },
+      { q:"A performance counter alert can do which of the following?", opts:["Automatically fix the detected performance issue","Trigger an action (run a script, log an event, send a notification) when a counter exceeds a threshold","Restart the server automatically when resources are low","Block user access to the server during high load"], ans:1 },
+      { q:"Event Viewer's System log typically contains:", opts:["Application-specific error messages from installed software","Security audit and logon events","Events generated by Windows OS components, services, and device drivers","IIS web server access and error logs"], ans:2 },
+      { q:"A Data Collector Set can record which types of data?", opts:["Only CPU utilization metrics","Performance counters, event traces, and system configuration snapshots","Only network interface traffic statistics","Only disk I/O measurements"], ans:1 },
+      { q:"Which monitoring tool shows a stability index score over time?", opts:["Performance Monitor","Event Viewer","Reliability Monitor","Task Manager"], ans:2 },
+      { q:"Event log subscriptions can be configured in which two modes?", opts:["Push and pull modes","Collector-initiated and source-initiated","Active and passive collection","Scheduled and real-time modes"], ans:1 },
+      { q:"Performance Monitor can display collected data in which formats?", opts:["Only real-time line graphs","Real-time graphs, bar charts, and text reports; data can also be logged to binary or CSV files","Only plain text summary reports","Only as exported CSV files in Report view"], ans:1 },
+      { q:"'Memory: Available MBytes' is an example of what?", opts:["An Event Viewer log entry","A performance counter","A baseline threshold setting","A Data Collector Set name"], ans:1 },
+      { q:"What does a high disk queue length counter typically indicate?", opts:["The disk volume is nearly full","The disk is a bottleneck — requests are queuing faster than the disk can process them","A disk hardware failure is imminent","Files are actively being backed up"], ans:1 },
+      { q:"Event Viewer's Application log contains:", opts:["Windows OS and driver events","Security audit and logon/logoff events","Events generated by installed applications such as databases or web servers","Hardware component failure events"], ans:2 },
+      { q:"Baselines are important because:", opts:["They set minimum hardware certification standards","They provide a reference point for detecting abnormal behaviour or gradual performance degradation","They automatically configure performance tuning settings","They are required for server hardware warranty validation"], ans:1 },
+      { q:"Task Manager's Performance tab shows:", opts:["Individual file access details per process","Overall real-time graphs for CPU, memory, disk, and network","Detailed security audit events","Application-specific error information"], ans:1 },
+      { q:"Resource Monitor can show which specific processes are:", opts:["Using specific files or holding file locks, and their network connections","Scheduled to run at a future time","Installed on the server as applications","Running as Windows services only"], ans:0 },
+      { q:"Accessing the Security log in Event Viewer requires:", opts:["No special permissions — all users can read it","Local administrator rights or appropriate audit privileges","Domain admin credentials in all cases","A third-party log management tool"], ans:1 },
+      { q:"Data Collector Sets are most useful for:", opts:["Taking a single one-time performance snapshot","Scheduled, long-term performance data collection to identify trends over time","Real-time monitoring only during active sessions","Browsing and filtering event logs"], ans:1 },
+      { q:"Which tool is most appropriate for investigating why a specific file is locked by a process?", opts:["Task Manager","Performance Monitor","Resource Monitor","Event Viewer"], ans:2 },
+      { q:"A CPU Processor Time counter consistently near 100% indicates:", opts:["Normal peak operation behaviour","The CPU is a bottleneck limiting system performance","The server is in an idle power-saving state","A network interface issue unrelated to CPU"], ans:1 },
+      { q:"Event log forwarding (subscriptions) requires which service to be running on source computers?", opts:["A third-party log agent","Windows Remote Management (WinRM) service","An internet connection to the collector","SQL Server for log storage and indexing"], ans:1 },
+      { q:"Which Windows Server tool creates automated performance monitoring schedules?", opts:["Task Manager","Event Viewer","Data Collector Sets in Performance Monitor","Reliability Monitor"], ans:2 },
+      { q:"What does the Processes tab in Task Manager allow you to do?", opts:["View only network activity per application","See all running processes with resource usage and end tasks if necessary","Browse event log entries for processes","Display detailed hardware information"], ans:1 },
+      { q:"When is the best time to capture a performance baseline?", opts:["Only after a problem has already occurred","During normal, representative operating conditions before any problems arise","During a major hardware or software failure","Only during the absolute peak load period"], ans:1 },
+      { q:"Event Viewer can help administrators identify:", opts:["Predicted future hardware failures only","Past errors, warnings, and informational events related to system and application issues","Only currently running processes","Network topology and routing information"], ans:1 },
+      { q:"What does a low Available Memory counter indicate?", opts:["The server has excessive RAM installed above requirements","Memory pressure that may lead to paging, degraded performance, or application failures","Optimal memory utilization and good performance","A disk I/O bottleneck unrelated to memory"], ans:1 },
+      { q:"What scale does the Reliability Monitor stability index use?", opts:["0 to 100","1 to 10","−10 to 10","0 to 1000"], ans:1 },
+      { q:"What does the Memory: Pages/sec counter measure?", opts:["The number of web page requests served per second","How frequently Windows reads from or writes to the paging file — a key memory pressure indicator","The number of running processes","Disk write speed in MB/sec"], ans:1 },
+      { q:"Event log subscriptions simplify monitoring by:", opts:["Automatically resolving the issues that generate events","Aggregating events from many servers into a central location for unified analysis","Sending automated email alerts to the admin","Blocking or suppressing suspicious event sources"], ans:1 },
+      { q:"Resource Monitor can display network activity at which level?", opts:["Total server bandwidth utilization only","Individual process-level network connections, remote addresses, and bandwidth usage","External IP addresses and geolocation only","Per-firewall-rule hit counts"], ans:1 },
+      { q:"A performance counter trace log does which of the following?", opts:["Captures only security-related events","Records performance counter values over time to a file for later analysis and comparison","Monitors only application crash dumps","Backs up and archives event logs automatically"], ans:1 },
+      { q:"Which tool would you use to determine if a recent Windows update caused system instability?", opts:["Task Manager","Event Viewer","Reliability Monitor","Performance Monitor"], ans:2 },
+      { q:"A bottleneck is correctly identified when:", opts:["Multiple resources are all simultaneously near 100%","One resource is consistently saturated while other resources are underutilized","A server experiences a catastrophic hardware failure","The network connection is completely disconnected"], ans:1 },
+      { q:"What is a counter alert in Performance Monitor?", opts:["An automated email notification built into Windows","An action triggered automatically when a performance counter value crosses a defined threshold","A visual colour change on the Performance Monitor graph","A special type of event log entry only"], ans:1 },
+      { q:"Data Collector Sets can collect data from which source types?", opts:["Performance counters only","Performance counters, event traces, and system configuration snapshots","Network packet captures only","SQL database query performance only"], ans:1 },
+      { q:"The Event Viewer Application log is most useful for:", opts:["Diagnosing OS kernel and driver issues","Investigating errors from installed apps like web servers, databases, or custom software","Reviewing security audit and logon events","Monitoring hardware driver failures"], ans:1 },
+      { q:"Performance Monitor baselines should ideally be captured:", opts:["Only during the single busiest time of day","Across multiple representative time periods to reflect normal workload patterns","After every server reboot automatically","Only when a performance problem is reported"], ans:1 },
+      { q:"Resource Monitor differs from Task Manager primarily in that it:", opts:["Provides less information and is simpler to read","Gives a more granular breakdown including file handles, specific network connections, and disk activity per process","Requires elevated admin rights while Task Manager does not","Only monitors disk I/O and ignores CPU and memory"], ans:1 },
+      { q:"Event log subscriptions use WinRM for:", opts:["Encrypting the stored event log files","Enabling remote communication between source computers and the collector computer","Filtering events by severity level before forwarding","Automatically archiving old log entries"], ans:1 },
+      { q:"The most comprehensive tool for long-term Windows Server performance trend analysis is:", opts:["Task Manager","Reliability Monitor","Performance Monitor used with Data Collector Sets","Event Viewer"], ans:2 },
+      { q:"Reliability Monitor is primarily useful for:", opts:["Real-time CPU and memory monitoring","Correlating system changes (installs, updates, crashes) on a timeline to diagnose recurring stability issues","Analyzing network traffic patterns","Backing up and exporting event logs"], ans:1 },
+    ],
+    written: [
+      { q:"What is Task Manager and how can it be used to spot problems on a server?", a:"Task Manager is a built-in Windows tool providing a real-time overview of system resource usage. In the Performance tab you can see CPU, memory, disk, and network at a glance. In the Processes tab you can spot runaway processes consuming excessive resources and end them. It is the first quick-check tool for 'why is the server slow' investigations." },
+      { q:"What is Resource Monitor and how does it differ from Task Manager?", a:"Resource Monitor (resmon.exe) provides a more granular breakdown of resource usage than Task Manager. It shows CPU usage per process, which specific files each process is accessing, active network connections per process, and disk activity per process. Unlike Task Manager's high-level view, Resource Monitor is used when you need to know exactly which process is locking a file or consuming a specific network connection." },
+      { q:"What is Reliability Monitor and how should it be used?", a:"Reliability Monitor (perfmon /rel) shows a stability index graph (1–10 scale) over time, with a timeline of critical events, warnings, and informational events (software installs, updates, crashes). It should be used to correlate drops in stability with specific changes — if the stability score dropped after a Windows update or software install, that is a strong clue about the cause." },
+      { q:"What is Performance Monitor used for, and what are counters, alerts, and Data Collector Sets?", a:"Performance Monitor (PerfMon) tracks detailed performance metrics over time. Counters are specific numeric metrics (e.g., Processor: % Processor Time, Memory: Available MBytes). Alerts trigger an action (log event, run script) when a counter crosses a threshold. Data Collector Sets group counters for scheduled collection, enabling long-term trend analysis and baseline comparison." },
+      { q:"Describe Event Viewer, what it tells you, and the different log types.", a:"Event Viewer is Windows' central log viewer. System log: OS, driver, and service events. Application log: events from installed applications. Security log: logon/logoff, privilege use, and object access audit events. Setup log: installation events. Forwarded Events: events from remote computers via subscriptions. Each entry is categorized as Information, Warning, Error, or Critical — helping admins diagnose failures and track security events." },
+      { q:"What are bottlenecks and baselines and how are they different?", a:"A baseline is a snapshot of normal system performance under typical load — used as a reference point. A bottleneck is a specific resource (CPU, memory, disk, network) that is consistently saturated and limiting overall performance. Baselines help identify bottlenecks: by comparing current counters to the baseline, you can detect which resource is now behaving abnormally." },
+      { q:"What are event log subscriptions and how can they simplify monitoring?", a:"Event log subscriptions collect events from remote source computers and forward them to a central collector computer, aggregating all event logs in one place. This simplifies monitoring because admins only need to check one location instead of logging into each server individually. It requires WinRM to be running on source computers and can use collector-initiated or source-initiated mode." },
+      { q:"What is a Data Collector Set and when would you use one?", a:"A Data Collector Set (DCS) is a configured group of performance counters, event traces, and/or system configuration data that Windows will collect on a schedule. You use a DCS when you need to capture long-term performance data — for example, capturing CPU and memory counters every hour overnight to find out if a batch job is causing performance issues that don't appear during business hours." },
+      { q:"How would you use Resource Monitor to troubleshoot a file that appears to be locked?", a:"Open Resource Monitor (resmon.exe or Task Manager > Performance > Open Resource Monitor). Go to the CPU tab and expand the Associated Handles search box. Type the file name you're looking for. Resource Monitor will show which process has a handle open to that file. You can then investigate or terminate that process to release the file lock." },
+      { q:"What does a high disk queue length counter indicate about server performance?", a:"A sustained disk queue length greater than 2 per spindle indicates that the disk subsystem is a bottleneck. Requests are arriving faster than the disk can process them, causing a queue. This leads to slow application response times, especially for disk-intensive workloads. The fix may involve adding faster storage (SSDs), spreading I/O across more disks, or upgrading to storage with higher IOPS." },
+      { q:"What are the main event log types in Event Viewer and what does each track?", a:"System: OS, service, and driver events. Application: events from user-installed applications. Security: success/failure audits for logons, object access, privilege use. Setup: OS installation and role configuration events. Forwarded Events: events collected from remote systems via subscriptions. Additional Application and Services logs exist for specific components like DNS, DHCP, Group Policy, etc." },
+      { q:"How does a performance baseline help identify and solve problems?", a:"A baseline records normal performance values (CPU %, available memory, disk queue, network utilization) during typical operation. When performance issues are reported later, you compare current counter values to the baseline. If available memory is now 200MB vs. the baseline of 2GB, you know memory consumption has grown dramatically — pointing to a memory leak or increased workload as the problem." },
+      { q:"What does the Memory: Pages/sec counter measure and when is it a concern?", a:"Pages/sec measures how many pages per second Windows is reading from or writing to the paging file on disk. A sustained high value (generally over 20) indicates memory pressure — the server doesn't have enough physical RAM and is compensating by using slower disk-based virtual memory. This significantly degrades performance and is a sign more RAM is needed." },
+      { q:"When would you use Performance Monitor instead of Task Manager?", a:"Use Performance Monitor when you need historical data (Task Manager only shows current snapshots), when you need to track metrics over hours or days, when you need to compare to a baseline, when you need to track dozens of custom counters simultaneously, or when you need to automate data collection on a schedule via Data Collector Sets. Task Manager is for quick spot checks; PerfMon is for deep analysis." },
+      { q:"What are the two modes for event log subscriptions?", a:"Collector-initiated: the collector computer pulls events from the source computers — easier to set up, collector needs access to sources. Source-initiated (push): source computers push events to the collector — better for large environments with many sources, requires Group Policy configuration to tell sources where to send events." },
+    ]
+  },
+
+  12: {
+    name: "Module 12: Upgrade & Migration",
+    mc: [
+      { q:"What is an in-place upgrade of a Windows Server?", opts:["Installing a fresh Windows Server on new hardware","Upgrading the existing server's OS while preserving roles, installed applications, data, and settings","Moving roles and data to a new server","Reinstalling the same OS version from scratch"], ans:1 },
+      { q:"What is a clean installation migration?", opts:["Upgrading an existing server OS version","Deploying a new server with the latest OS and then migrating roles and data to it","Wiping and reinstalling the same OS version","Removing unnecessary roles from a production server"], ans:1 },
+      { q:"What is the Storage Migration Service (SMS)?", opts:["An Azure cloud storage management solution","A Windows Server tool for migrating file data, permissions, shares, and network identity to a new server","A tool for backing up and archiving storage volumes","A third-party storage management platform"], ans:1 },
+      { q:"What is DFS replication?", opts:["A disk defragmentation and formatting utility","Distributed File System replication — keeps folder contents synchronized across multiple servers","A scheduled backup and restore service","A RAID storage configuration tool"], ans:1 },
+      { q:"What is the orchestration server in a Storage Migration Service deployment?", opts:["The source server being migrated away from","The server that coordinates and manages the SMS migration process","The destination server receiving the migrated data","A dedicated monitoring server for the migration"], ans:1 },
+      { q:"What are Windows Server Migration Tools?", opts:["Physical tools for moving server hardware","PowerShell cmdlets and tools for transferring roles, features, shares, and settings between servers","A third-party commercial migration software suite","Azure-only migration tools"], ans:1 },
+      { q:"For domain controllers, which migration approach is considered best practice?", opts:["In-place upgrade of the existing domain controller OS","Clean migration — deploy a new server and promote it, then decommission the old one","Side-by-side OS upgrade using a parallel installation","Rolling OS upgrade across all DCs simultaneously"], ans:1 },
+      { q:"Can pre-Windows Server 2012 domain controllers be directly upgraded to Server 2022?", opts:["Yes, all versions support a direct upgrade path","No, only certain version-to-version upgrade paths are supported; skipping too many versions requires migration","Yes, using a special Microsoft migration wizard","No, they must be completely decommissioned without any migration"], ans:1 },
+      { q:"Why must DFS replication be considered during a server upgrade or migration?", opts:["DFS requires a specific Windows Server version to function","When a server participating in DFS is replaced, the replication topology must be updated to include the new server and remove the old one","DFS uses a proprietary format incompatible with newer Windows versions","DFS is deprecated and removed from Server 2022"], ans:1 },
+      { q:"In addition to files, what else does SMS preserve during migration?", opts:["Only the raw file data (no metadata)","NTFS permissions, share permissions, share names, and the source server's network identity (name and IP)","Only user account information","Application configurations and registry settings"], ans:1 },
+      { q:"An in-place upgrade carries more risk than a clean migration because:", opts:["It permanently deletes all data during the OS upgrade process","Any existing misconfigurations, legacy cruft, or issues in the old OS are carried forward into the new OS","It requires significantly more disk space than a clean install","The upgrade cannot be completed without a rollback option"], ans:1 },
+      { q:"AD DS migration differs from Storage Migration Service because:", opts:["AD DS migration only works between physical servers","AD DS migration moves directory objects (users, groups, GPOs) and domain roles — not file data","SMS automatically handles Active Directory migrations too","AD DS migration must be done entirely by hand without tools"], ans:1 },
+      { q:"When does the SMS orchestration server need failover clustering installed?", opts:["Always, for every SMS migration scenario","When the destination server will host clustered file server workloads","When the source server has failover clustering configured","SMS always uses failover clustering regardless of scenario"], ans:1 },
+      { q:"In-place upgrade is generally only recommended for:", opts:["Domain controllers and other critical infrastructure servers","Well-maintained, healthy systems that have a supported direct upgrade path","Any server regardless of its current condition","Only servers running legacy applications"], ans:1 },
+      { q:"What happens to the source server's network identity in an SMS cutover?", opts:["The source server keeps its original name and IP address","The destination server assumes the source server's computer name and IP address","Both servers temporarily share the same identity","A new unique name and IP are created for the destination"], ans:1 },
+      { q:"What tool is used for migrating Active Directory objects (users, groups) between domains?", opts:["Storage Migration Service","Active Directory Migration Tool (ADMT)","Windows Server Migration Tools (PowerShell cmdlets)","ADPrep"], ans:1 },
+      { q:"When upgrading domain controllers, what should be done first?", opts:["Immediately remove all old domain controllers","Raise the domain and forest functional level before adding new DCs","Deploy the new server, join it to the domain, and promote it as a DC first — then decommission old ones","Reinstall Windows Server on all DCs simultaneously"], ans:2 },
+      { q:"The forest functional level affects:", opts:["File server share performance","Features available in AD DS across all domains in the entire forest","VPN and remote access connectivity","Available network bandwidth"], ans:1 },
+      { q:"What PowerShell module provides the Windows Server Migration Tools cmdlets?", opts:["ActiveDirectory","ServerMigration","Migration","ADDSDeployment"], ans:1 },
+      { q:"What server role must be installed on the orchestration server for SMS?", opts:["File Server role","Storage Migration Service role","Remote Desktop Services role","Hyper-V role"], ans:1 },
+      { q:"A clean upgrade is preferred for AD DS domain controllers because:", opts:["It is faster to complete than an in-place upgrade","It results in a clean OS without accumulated legacy issues, misconfigurations, or unsupported configurations","It requires less planning and pre-migration preparation","It automatically preserves SID history without ADMT"], ans:1 },
+      { q:"DFS replication topology must be updated specifically when:", opts:["New users are added to the domain","A server participating in DFS replication is replaced or decommissioned","New applications are installed on a file server","The domain functional level is raised"], ans:1 },
+      { q:"The Storage Migration Service management UI is accessible through:", opts:["Active Directory Users and Computers snap-in","Windows Admin Center","Server Manager only","The Azure Portal"], ans:1 },
+      { q:"Windows Server Migration Tools are installed using:", opts:["A downloaded third-party installer","Install-WindowsFeature Migration cmdlet or Server Manager > Add Roles and Features","Windows Update automatically during OS upgrade","Active Directory Sites and Services snap-in"], ans:1 },
+      { q:"What is the primary advantage of SMS over manually copying files to a new server?", opts:["SMS is always faster on any network connection","SMS minimizes user disruption by preserving network identity and automating permission-accurate data transfer","SMS reduces Microsoft licensing costs significantly","SMS automatically upgrades the destination server's OS version"], ans:1 },
+      { q:"An in-place upgrade preserves which of the following?", opts:["Only the OS version number","Server roles, installed applications, local data, and server configuration","Only user account passwords","Only Group Policy objects and their links"], ans:1 },
+      { q:"During a domain controller upgrade, FSMO roles should be:", opts:["Deleted and manually recreated on the new server","Transferred gracefully to the new domain controller before decommissioning the old one","Permanently left on the original server even after it is decommissioned","Split equally across all remaining domain controllers automatically"], ans:1 },
+      { q:"What is the minimum domain functional level required before adding Server 2022 domain controllers?", opts:["Windows Server 2003 functional level","Windows Server 2008 R2 functional level","Windows Server 2012 functional level","Windows Server 2016 functional level"], ans:1 },
+      { q:"After an SMS migration cutover, the source server:", opts:["Is automatically and immediately decommissioned by SMS","Can be safely repurposed or decommissioned since the destination has taken over its identity and data","Must be kept online as a passive backup for 30 days","Continues actively serving users alongside the destination"], ans:1 },
+      { q:"Which scenario calls for AD DS migration rather than Storage Migration Service?", opts:["Moving file shares from a retiring file server to a new one","Merging two companies' Active Directory domains after an acquisition","Migrating a web server to new hardware","Replacing aging storage hardware under a file server"], ans:1 },
+      { q:"Pre-2012 servers cannot be directly upgraded to Server 2022 because:", opts:["They use an incompatible file system format","Microsoft only supports specific version-to-version upgrade paths; large version gaps require migration","The hardware is inherently incompatible with Server 2022","The domain functional level is always too old"], ans:1 },
+      { q:"After a successful in-place upgrade, the server retains:", opts:["Only the computer hostname","IP configuration, hostname, domain membership, server roles, installed apps, and data","Only the IP address and domain membership","Only Active Directory computer and user accounts"], ans:1 },
+      { q:"What does the SMS Inventory phase accomplish?", opts:["Cataloguing the physical hardware components in the server","Scanning source servers to identify files, shares, permissions, and configuration to be migrated","Taking a full backup of the destination server before migration","Auditing the network configuration of both source and destination"], ans:1 },
+      { q:"What does the SMS Transfer phase accomplish?", opts:["Physically moving server hardware to a new rack location","Copying file data and share configurations from the source to the destination server","Transferring FSMO roles to the new domain controller","Transferring software licenses to the new server"], ans:1 },
+      { q:"What does the SMS Cutover phase accomplish?", opts:["Shutting down and decommissioning the source server","Switching the network identity (computer name and IP address) from source to destination","Installing the operating system on the destination server","Removing old or duplicate data from the source"], ans:1 },
+      { q:"Which tool is used to prepare the AD DS schema and forest for a new version of Windows Server domain controllers?", opts:["DCPromo","ADPrep (adprep.exe)","ADMT","NTDSUtil"], ans:1 },
+      { q:"An organization with Server 2008 R2 wanting to move to Server 2022 should:", opts:["Attempt a direct in-place upgrade from 2008 R2 to 2022 (unsupported)","Plan a multi-step upgrade path through intermediate versions or use migration tools to build fresh 2022 servers","Only use SMS for this scenario","Wait until Server 2022 reaches end of support"], ans:1 },
+      { q:"SMS supports migration of which of the following?", opts:["Only NTFS volumes with no compression","Files, NTFS and share permissions, share names, and network identity","Active Directory user and group objects","Application-specific configurations and registry settings"], ans:1 },
+      { q:"A key benefit of a clean installation over an in-place upgrade is:", opts:["Faster overall completion time","Eliminates accumulated OS configuration drift, legacy misconfigurations, and unsupported customizations","Requires no planning or pre-migration testing","Zero downtime for the service being migrated"], ans:1 },
+      { q:"Windows Server Migration Tools require installation on:", opts:["Only the source server","Both the source and destination servers","Only the destination server","Only the orchestration server"], ans:1 },
+      { q:"Domain and forest functional level raises:", opts:["Can be easily rolled back if problems arise","Are permanent — once raised they cannot be lowered, so careful testing is required first","Require a full server reboot of all domain controllers","Have no impact on already-running servers and services"], ans:1 },
+      { q:"Before raising the forest functional level, you must ensure:", opts:["All old domain controllers have been physically removed","All domain controllers in the entire forest are running the minimum required OS version","ADPrep has been run on every domain controller","DCPromo has been run to decommission old DCs"], ans:1 },
+      { q:"Which SMS scenario specifically requires failover clustering on the destination server?", opts:["Any file server migration using SMS","Migrating a clustered file server workload that will remain highly available on the destination","Migrating domain controllers between sites","Migrating web server content and configuration"], ans:1 },
+      { q:"The orchestration server in SMS must satisfy which requirement?", opts:["It must be the source server being migrated","It must have the Storage Migration Service role installed and network access to both source and destination","It must be a domain controller","It must have the same IP address as the eventual destination"], ans:1 },
+      { q:"What does ADPrep do and when is it needed?", opts:["Restores and repairs a corrupt Active Directory database","Extends and updates the AD schema and prepares the forest/domain for new domain controller OS versions; run before adding DCs of a newer version","Migrates AD objects between forests or domains","Configures DNS delegation for Active Directory"], ans:1 },
+      { q:"During an in-place upgrade of a domain controller, the DC:", opts:["Must be taken completely offline for the entire multi-hour upgrade process","Will have planned downtime during the upgrade phases but typically other DCs in the domain continue serving authentication requests","Cannot serve any authentication requests at any point during the upgrade","Automatically fails over all requests to another DC without any interruption"], ans:1 },
+      { q:"What should you verify about SYSVOL replication after a domain controller upgrade?", opts:["Nothing — SYSVOL replication is not affected by OS upgrades","That SYSVOL replication has converged and is healthy on the upgraded DC — it may be temporarily disrupted during the upgrade","That SYSVOL was automatically migrated to the new server","That SYSVOL replication was permanently stopped as expected"], ans:1 },
+      { q:"In SMS, 'network identity cutover' specifically means:", opts:["Changing the destination server's network interface MAC address","The destination server takes over the source server's computer name and IP address, making it transparent to users","Both servers temporarily share the same network identity for load balancing","The source server's network identity is immediately and permanently deleted"], ans:1 },
+      { q:"The key benefit of SMS over manual robocopy-based file migration is:", opts:["SMS is always faster over any network speed","SMS preserves all NTFS permissions, share configurations, and can also transfer network identity for transparent cutover","SMS is always free while manual robocopy requires licensing","SMS works effectively even over low-bandwidth WAN links"], ans:1 },
+      { q:"Windows Server Migration Tools are best suited for migrating:", opts:["Large volumes of unstructured file data between servers","Specific server roles and features (DHCP, DNS, print server, file shares) with their configurations intact","Active Directory objects between domains","Virtual machine images between hypervisors"], ans:1 },
+    ],
+    written: [
+      { q:"What is the difference between in-place and clean upgrades and how does each impact a domain?", a:"In-place upgrade: upgrades the existing server's OS preserving roles, apps, and data. Faster but riskier — carries forward any existing issues. Impact on domain is minimal since the same DC continues with a new OS version. Clean migration: new server deployed, roles migrated, old server decommissioned. More work but cleaner result. For DCs, the domain briefly has an additional DC during transition, and FSMO roles are transferred before decommissioning the old DC." },
+      { q:"What are the key considerations when upgrading existing domain controllers to Server 2022?", a:"Key considerations: 1) Supported upgrade path — cannot skip major versions from pre-2012. 2) ADPrep must be run to update the schema. 3) FSMO roles should be transferred to new DCs before decommissioning old ones. 4) Domain and forest functional levels may need to be raised after all old DCs are removed. 5) SYSVOL replication health must be verified. 6) Clean migration is preferred over in-place for DCs." },
+      { q:"Why is DFS replication important to consider during a server migration or upgrade?", a:"If a server participating in DFS replication is replaced, the old server must be removed from the replication topology and the new server must be added. Failure to do this causes replication to break — the new server won't receive updates and the old server (now decommissioned) will show as an error. Files may diverge between sites if replication is not properly re-established on the new server." },
+      { q:"What is the Storage Migration Service and what does the orchestration server do?", a:"SMS is a Windows Server tool (managed through Windows Admin Center) that migrates file data, permissions, shares, and network identity from source to destination servers. The orchestration server has the SMS role installed — it coordinates the entire process, runs the inventory scan, manages the data transfer, and executes the network identity cutover. The orchestration server can be a separate management server or the destination itself." },
+      { q:"What are the differences between Storage Migration Service and AD DS migration?", a:"SMS migrates file data, NTFS permissions, share configurations, and network identity — used for replacing file servers. AD DS migration (using ADMT) migrates directory objects like user accounts, groups, and GPOs between Active Directory domains — used in domain restructuring or company mergers. SMS doesn't touch Active Directory objects; AD DS migration doesn't move file data." },
+      { q:"What are the three phases of an SMS migration?", a:"1) Inventory: SMS scans the source server and documents all files, shares, permissions, and configuration. 2) Transfer: SMS copies all file data and share configurations to the destination server (can be run multiple times to keep destination current). 3) Cutover: SMS switches the network identity (computer name and IP) from the source to the destination, making the change transparent to users and applications." },
+      { q:"Why is a clean upgrade preferred for domain controllers over an in-place upgrade?", a:"Domain controllers are critical infrastructure. In-place upgrades carry forward any existing misconfigurations, legacy schema issues, or unsupported customizations — increasing risk. A clean migration produces a fresh, well-configured DC on the latest OS with no legacy baggage. The cost of DC downtime or failure is high enough to justify the extra planning effort of a clean migration." },
+      { q:"What should happen to FSMO roles during a domain controller upgrade?", a:"FSMO (Flexible Single Master Operations) roles should be gracefully transferred to a new or remaining healthy domain controller before the old DC is decommissioned. If the old DC is removed while holding FSMO roles, the roles must be seized (forcefully taken), which is a less clean process. Proper transfer ensures continuity of PDC Emulator, RID Master, Infrastructure Master, Domain Naming Master, and Schema Master functions." },
+      { q:"What is ADPrep and when is it used?", a:"ADPrep is a command-line tool (adprep.exe) that prepares an Active Directory forest and domain for new domain controller OS versions. It extends the AD schema with new attributes needed by the newer OS and updates ACLs. It must be run before the first domain controller of a new OS version is promoted. In Server 2012 and later, ADPrep is integrated into the DC promotion wizard automatically." },
+      { q:"Can pre-2012 servers be directly upgraded to Server 2022, and why or why not?", a:"No. Microsoft only supports specific version-to-version in-place upgrade paths (e.g., Server 2016 → 2022, or Server 2019 → 2022). Server 2008 R2 or Server 2012 cannot be directly upgraded to Server 2022 in-place. Organizations must either perform multi-step upgrades through intermediate versions or use migration tools to build new Server 2022 servers and migrate workloads across." },
+      { q:"What are Windows Server Migration Tools and how are they used?", a:"Windows Server Migration Tools is a Windows feature (Install-WindowsFeature Migration) providing PowerShell cmdlets for migrating specific server roles and features from one server to another. It must be installed on both source and destination. Admins export role configuration and data from the source using the cmdlets, then import it on the destination. Supports migrating DHCP, DNS, file shares, local users, and more." },
+      { q:"What does SMS preserve during migration besides raw file data?", a:"SMS preserves: NTFS file permissions (ACLs), share names and share permissions, file attributes and timestamps, and — crucially — the source server's network identity (computer name and IP address) which is transferred to the destination during cutover. This identity transfer means users and applications continue accessing the same name/IP without reconfiguration." },
+      { q:"When would you use ADMT instead of SMS?", a:"Use ADMT (Active Directory Migration Tool) when you need to migrate Active Directory objects — user accounts, groups, computer accounts, and Group Policy objects — between domains or forests. This is needed in domain consolidations, company mergers, domain restructurings, or renaming projects. SMS is for file/storage migration; ADMT is for AD object migration." },
+      { q:"Why does raising the domain or forest functional level matter?", a:"Raising the functional level unlocks new AD DS features specific to that version (e.g., fine-grained password policies at 2008 level, Recycle Bin at 2008 R2, Protected Users group features at 2012 R2). However, functional level raises are irreversible — once raised you cannot lower the level. This means you must remove all older domain controllers first and be confident before proceeding." },
+      { q:"What are the risks of performing an in-place upgrade on a domain controller?", a:"Risks include: existing misconfigurations being carried into the new OS; potential for upgrade failure mid-process leaving the DC in an unknown state; AD DS and SYSVOL replication disruption during the upgrade window; application compatibility issues with server roles post-upgrade; no easy rollback path if the upgraded OS behaves incorrectly. These risks are why clean migration is the preferred approach for DCs." },
+    ]
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+// QUIZ ENGINE
+// ═══════════════════════════════════════════════════════
+let currentQuiz = { title:'', mcQ:[], writtenQ:[], moduleNum:0 };
+let answers = {};
+let submitted = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function sample(arr, n) {
+  return shuffle(arr).slice(0, n);
+}
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showHome() { showView('view-home'); }
+
+function startModuleQuiz(mod) {
+  const data = MODULES[mod];
+  const mcQ = sample(data.mc, 20).map((q,i) => ({
+    ...q, id: `mc_${i}`,
+    opts: (() => {
+      const shuffled = shuffle(q.opts.map((o,oi) => ({o, correct: oi===q.ans})));
+      return { opts: shuffled.map(x=>x.o), ans: shuffled.findIndex(x=>x.correct) };
+    })()
+  }));
+  const wQ = sample(data.written, 5);
+  // Flatten shuffled opts back
+  const finalMC = mcQ.map((q,i) => ({
+    q: q.q, opts: q.opts.opts, ans: q.opts.ans, id: `mc_${i}`
+  }));
+  currentQuiz = { title: data.name, mcQ: finalMC, writtenQ: wQ, moduleNum: mod };
+  launchQuiz();
+}
+
+function startFullQuiz() {
+  let allMC = [], allW = [];
+  [8,9,10,11,12].forEach(mod => {
+    const data = MODULES[mod];
+    const mcs = sample(data.mc, 20);
+    const ws = sample(data.written, 2);
+    allMC = allMC.concat(mcs);
+    allW = allW.concat(ws);
+  });
+  allMC = shuffle(allMC);
+  allW = shuffle(allW);
+  const finalMC = allMC.map((q,i) => {
+    const shuffled = shuffle(q.opts.map((o,oi) => ({o, correct: oi===q.ans})));
+    return { q: q.q, opts: shuffled.map(x=>x.o), ans: shuffled.findIndex(x=>x.correct), id:`mc_${i}` };
+  });
+  currentQuiz = { title: 'Full Quiz — All Modules', mcQ: finalMC, writtenQ: allW, moduleNum: 0 };
+  launchQuiz();
+}
+
+function launchQuiz() {
+  answers = {};
+  submitted = false;
+  document.getElementById('quiz-title').textContent = currentQuiz.title;
+  document.getElementById('submit-btn').style.display = 'block';
+  renderQuiz();
+  showView('view-quiz');
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-content');
+  let html = '';
+
+  html += `<div class="section-label">Multiple Choice — ${currentQuiz.mcQ.length} Questions</div>`;
+  currentQuiz.mcQ.forEach((q, idx) => {
+    html += `<div class="question-card" id="qcard_${q.id}">
+      <div class="question-num">Q${idx+1}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options" id="opts_${q.id}">`;
+    q.opts.forEach((opt, oi) => {
+      html += `<button class="option-btn" id="opt_${q.id}_${oi}" onclick="selectOption('${q.id}',${oi})">${String.fromCharCode(65+oi)}. ${opt}</button>`;
+    });
+    html += `</div></div>`;
+  });
+
+  html += `<div class="section-label" style="margin-top:40px">Written Response — ${currentQuiz.writtenQ.length} Questions</div>`;
+  currentQuiz.writtenQ.forEach((q, idx) => {
+    html += `<div class="written-card">
+      <div class="question-num">Written ${idx+1}</div>
+      <div class="question-text">${q.q}</div>
+      <button class="answer-toggle" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="answer-box">${q.a}</div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+  updateProgress();
+}
+
+function selectOption(qid, oi) {
+  if (submitted) return;
+  if (answers[qid] !== undefined) return; // already answered
+
+  const q = currentQuiz.mcQ.find(x => x.id === qid);
+  answers[qid] = oi;
+
+  const isCorrect = oi === q.ans;
+  const card = document.getElementById(`qcard_${qid}`);
+  card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+
+  q.opts.forEach((_,i) => {
+    const btn = document.getElementById(`opt_${qid}_${i}`);
+    btn.disabled = true;
+    if (i === q.ans) btn.classList.add('reveal-correct');
+    if (i === oi && !isCorrect) btn.classList.add('wrong');
+    if (i === oi && isCorrect) btn.classList.add('correct');
+  });
+
+  updateProgress();
+}
+
+function toggleAnswer(btn) {
+  const box = btn.nextElementSibling;
+  const visible = box.classList.toggle('visible');
+  btn.textContent = visible ? 'Hide Answer' : 'Show Answer';
+}
+
+function updateProgress() {
+  const total = currentQuiz.mcQ.length;
+  const done = Object.keys(answers).length;
+  const pct = total > 0 ? (done/total)*100 : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  const correct = currentQuiz.mcQ.filter(q => answers[q.id] === q.ans).length;
+  document.getElementById('score-display').textContent = `Score: ${correct} / ${done}`;
+}
+
+function submitQuiz() {
+  submitted = true;
+  document.getElementById('submit-btn').style.display = 'none';
+
+  // Reveal all unanswered
+  currentQuiz.mcQ.forEach(q => {
+    if (answers[q.id] === undefined) {
+      q.opts.forEach((_,i) => {
+        const btn = document.getElementById(`opt_${q.id}_${i}`);
+        if (btn) {
+          btn.disabled = true;
+          if (i === q.ans) btn.classList.add('reveal-correct');
+        }
+      });
+    }
+  });
+
+  const total = currentQuiz.mcQ.length;
+  const correct = currentQuiz.mcQ.filter(q => answers[q.id] === q.ans).length;
+  const pct = total > 0 ? Math.round((correct/total)*100) : 0;
+
+  document.getElementById('result-score').textContent = `${correct} / ${total}`;
+  document.getElementById('result-label').textContent = `${pct}% · ${currentQuiz.title}`;
+
+  let grade = '', cls = '';
+  if (pct >= 90) { grade = 'A — Excellent!'; cls = 'grade-A'; }
+  else if (pct >= 80) { grade = 'B — Good Work'; cls = 'grade-B'; }
+  else if (pct >= 70) { grade = 'C — Passing'; cls = 'grade-C'; }
+  else if (pct >= 60) { grade = 'D — Needs Improvement'; cls = 'grade-D'; }
+  else { grade = 'F — Keep Studying'; cls = 'grade-F'; }
+
+  const gradeEl = document.getElementById('result-grade');
+  gradeEl.textContent = grade;
+  gradeEl.className = `result-grade ${cls}`;
+
+  // Build review
+  let reviewHTML = '<h3 style="margin-bottom:16px;font-size:1.1rem;">Review — Multiple Choice</h3>';
+  currentQuiz.mcQ.forEach((q, idx) => {
+    const userAns = answers[q.id];
+    const correct2 = userAns === q.ans;
+    const icon = userAns === undefined ? '⬜' : (correct2 ? '✅' : '❌');
+    reviewHTML += `<div class="question-card" style="margin-bottom:12px;${correct2?'border-color:var(--green)':userAns===undefined?'':'border-color:var(--red)'}">
+      <div class="question-num">${icon} Q${idx+1}</div>
+      <div class="question-text" style="font-size:.95rem">${q.q}</div>
+      <div style="margin-top:8px;font-size:.87rem;color:var(--green)">✓ ${String.fromCharCode(65+q.ans)}. ${q.opts[q.ans]}</div>
+      ${userAns !== undefined && !correct2 ? `<div style="margin-top:4px;font-size:.87rem;color:var(--red)">✗ You answered: ${String.fromCharCode(65+userAns)}. ${q.opts[userAns]}</div>` : ''}
+    </div>`;
+  });
+
+  reviewHTML += '<h3 style="margin:28px 0 16px;font-size:1.1rem;">Review — Written Questions</h3>';
+  currentQuiz.writtenQ.forEach((q, idx) => {
+    reviewHTML += `<div class="written-card">
+      <div class="question-num">Written ${idx+1}</div>
+      <div class="question-text">${q.q}</div>
+      <button class="answer-toggle" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="answer-box">${q.a}</div>
+    </div>`;
+  });
+
+  document.getElementById('result-review').innerHTML = reviewHTML;
+  showView('view-result');
+}
+
+function retakeQuiz() {
+  if (currentQuiz.moduleNum) {
+    startModuleQuiz(currentQuiz.moduleNum);
+  } else {
+    startFullQuiz();
+  }
+}
+</script>
 </body>
 </html>
